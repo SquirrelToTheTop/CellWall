@@ -1,0 +1,7 @@
+// This file will be configured by CMake and @xx@ values will be replaced
+//
+
+// Version
+#define cellWall_VERSION_MAJOR @cellWall_VERSION_MAJOR@
+#define cellWall_VERSION_MINOR @cellWall_VERSION_MINOR@
+
