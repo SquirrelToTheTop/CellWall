@@ -24,7 +24,8 @@ configure_file(${CellWall_h_dir}/cellWallConfig.h.in ${CellWall_h_dir}/cellWallC
 # add code
 add_library(${PROJECT_NAME}_obj SHARED ${PROJECT_SOURCE_DIR}/src/cellWallUtils.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallIO.cpp
-				       ${PROJECT_SOURCE_DIR}/src/cellWallForces.cpp
+                                       ${PROJECT_SOURCE_DIR}/src/cellWallForces.cpp
+                                       ${PROJECT_SOURCE_DIR}/src/cellWallObject.cpp
 )
 
 target_compile_options(${PROJECT_NAME}_obj PRIVATE -O3 -Wall -g -fPIC ${OpenMP_C_FLAGS} -lm)
