@@ -1,6 +1,8 @@
 #ifndef CELLWALL_PARAMS_H
 #define CELLWALL_PARAMS_H
 
+const short int DIM=3; // 3Dimensions by default, 2D not possible 
+
 const double PI=3.1415926535897932;
 
 const double stiffness_g = 5000.0; // pN/nm glycosidic

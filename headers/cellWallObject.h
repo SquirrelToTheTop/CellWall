@@ -1,17 +1,30 @@
 #ifndef CELLWALLMONOLAYER_CLASS
 #define CELLWALLMONOLAYER_CLASS
 
+#include "cellWallParams.h"
+#include "math.h"
+
+/*
+ * Class to define the entire cell wall structure
+ * 
+ */
 class CellWallMonolayer{
 
- public:
-  CellWallMonolayer(int, int);  
-  ~CellWallMonolayer();
+  public:
+    CellWallMonolayer(int, int);  // constructor
+    ~CellWallMonolayer(); // killor
 
- private:
-  int nstrands = 0; // number of strands
-  int npgstrand = 0; // number of peptidoglycans per strand
+    void generate_geometry(); // generate position of mass in 3D
 
-  int total_npg = 0; // total number of peptidoglycans
+  public:
+    int * coordinate_xyz = nullptr; // array of coordinate (x1,y1,z1, x2,y2,z2, ...)
+
+  private:
+    int _nstrands = 0; // number of strands
+    int _npgstrand = 0; // number of peptidoglycans per strand
+    int _total_npg = 0; // total number of peptidoglycans
+
+    double _cellwall_radius = 0.0f;
 
 };
 

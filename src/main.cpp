@@ -14,5 +14,10 @@ int main(int argc, char *argv[]){
 
 	CellWallMonolayer *cwl = new CellWallMonolayer(5, 10);
 
+	cwl->generate_geometry();
+
+
+	delete cwl;
+
 	return EXIT_SUCCESS;
 }
