@@ -16,8 +16,12 @@ class CellWallMonolayer{
 
     void generate_geometry(); // generate position of mass in 3D
 
+    // getter
+    double * get_coordinate_array(); // get pointor to coordinate array
+    int get_total_npg();
+
   public:
-    int * coordinate_xyz = nullptr; // array of coordinate (x1,y1,z1, x2,y2,z2, ...)
+    double * coordinate_xyz = nullptr; // array of coordinate (x1,y1,z1, x2,y2,z2, ...)
 
   private:
     int _nstrands = 0; // number of strands

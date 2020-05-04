@@ -20,7 +20,7 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
   _cellwall_radius = d0_g * npgstrand / (2.0f*PI);
 
-  coordinate_xyz = new int[DIM * _total_npg];
+  coordinate_xyz = new double[DIM * _total_npg];
   fprintf(stdout, "\n\t> Allocation of coordinate_xyz array\n");
   fflush(stdout);
 
@@ -72,16 +72,13 @@ void CellWallMonolayer::generate_geometry(){
     coordinate_xyz[offset+1] = 0.0f; // y coordinate (first strand @ (x,0,z))
     coordinate_xyz[offset+DIM-1] = _cellwall_radius * sin(alpha); // z coordinate
     alpha += dalpha;
-    
-    fprintf(stdout, "\n\t> alpha : %f, 2PI: %f", alpha, 2.0f*PI);
-    fflush(stdout);
 
-    offset++;
+    offset += DIM;
   }
 
   // set all y coordinate and propagate coordinate of first strand to others
   offset= _npgstrand*DIM; // x coordinate of first mass of second strand
-  ystrand=0.0f;
+  ystrand = d0_p;
   for(i=1; i<_nstrands; ++i){
     
     offset_0 = 0; // offset first strand to loop over it
@@ -102,14 +99,36 @@ void CellWallMonolayer::generate_geometry(){
   // just test the distance between two point of first strand
   // to compare to the distance at rest of a glycosidic spring in 
   // order to see if its already hardly bend because a small number of 
-  // mass
+  // mass. Stupid for now since the cell wall radius is computed considering
+  // input but later cell wall radius will be defined by input of bacteria
+  // then we must be sure of the geometrical state of the spring are not to
+  // far from rest
   
-  double actual_d0_g = _cellwall_radius * tan(dalpha*0.5f);
+  double actual_d0_g = 2.0f * (_cellwall_radius * tan(dalpha*0.5f));
+  double inf, sup;
+
+  inf = d0_g * (1.0f-epsilon_g);
+  sup = d0_g * (1.0f+epsilon_g);
+  if( actual_d0_g > sup || actual_d0_g < inf  ){
+    fprintf(stdout, "\n\t> WARNING: geometrical size of glyco-spring to far from rest ");
+    fprintf(stdout, "\n\t> WARNING: borne : %f < %f  < %f", inf, actual_d0_g, sup);
+    fprintf(stdout, "\n\t> WARNING: rest %f <-----> current %f ", d0_g, actual_d0_g);
+    fflush(stdout);
+  }
+
   fprintf(stdout, "\n\t> actual d0_g : %f\n", actual_d0_g);
   fprintf(stdout, "\n\t> theorical d0_g : %f\n", d0_g);
   fflush(stdout);
 
+}
 
+/* Getter */
 
+double * CellWallMonolayer::get_coordinate_array(){
+  return coordinate_xyz;
+}
+
+int CellWallMonolayer::get_total_npg(){
+  return _total_npg;
 }
 
