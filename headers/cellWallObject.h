@@ -14,7 +14,8 @@ class CellWallMonolayer{
     CellWallMonolayer(int, int);  // constructor
     ~CellWallMonolayer(); // killor
 
-    void generate_geometry(); // generate position of mass in 3D
+    void generate_geometry(); // generate position of masses in 3D
+    void generate_bonds(); // generate bonds between masses
 
     // getter
     double * get_coordinate_array(); // get pointor to coordinate array
@@ -22,6 +23,8 @@ class CellWallMonolayer{
 
   public:
     double * coordinate_xyz = nullptr; // array of coordinate (x1,y1,z1, x2,y2,z2, ...)
+    int * glyco_bonds = nullptr;
+    int * pepti_bonds = nullptr;
 
   private:
     int _nstrands = 0; // number of strands

@@ -32,9 +32,23 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
  */
 CellWallMonolayer::~CellWallMonolayer(){
 
-  delete [] coordinate_xyz;
-  fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array\n");
-  fflush(stdout);
+  if( coordinate_xyz ){
+    delete [] coordinate_xyz;
+    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array\n");
+    fflush(stdout);
+  }
+
+  if( glyco_bonds ){
+    delete [] glyco_bonds;
+    fprintf(stdout, "\n\t> Deallocation of glyco_bonds array\n");
+    fflush(stdout);
+  }
+
+  if( pepti_bonds ){
+    delete [] pepti_bonds;
+    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array\n");
+    fflush(stdout);
+  }
 
 }
 
@@ -57,7 +71,7 @@ CellWallMonolayer::~CellWallMonolayer(){
  */   
 void CellWallMonolayer::generate_geometry(){
 
-  fprintf(stdout, "\n\t> Generate cell wall mass position in 3D coordinate \n");
+  fprintf(stdout, "\n\t> Generate cell wall masses position in 3D coordinate \n");
   fflush(stdout);
 
   int i, j, offset, offset_0;
@@ -121,6 +135,39 @@ void CellWallMonolayer::generate_geometry(){
   fflush(stdout);
 
 }
+
+/*
+ * Generate all mass position in 3D coordinate system
+ * 
+ *        z
+ *        |  
+ *           *  *--*  *--*  *
+ *           |  |  |  |  |  | 
+ *           *--*  *--*  *--* 
+ *           |  |  |  |  |  |
+ *           *  *--*  *--*  *    -> y
+ *           |  |  |  |  |  |
+ *           *--*  *--*  *--*
+ *           |  |  |  |  |  | 
+ *           *  *--*  *--*  * 
+ *       /
+ *      x
+ *  
+ * x: varies in clock like
+ * y: strand coordinate wich increase from a lenght of peptidique spring 
+ * z: varies with projection 
+ */   
+void CellWallMonolayer::generate_bonds(){
+
+  fprintf(stdout, "\n\t> Generate cell wall masses bonds \n");
+  fflush(stdout);
+
+
+
+
+}
+
+
 
 /* Getter */
 
