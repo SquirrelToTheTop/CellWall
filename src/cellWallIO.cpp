@@ -18,6 +18,8 @@ CellWallIOSystem::CellWallIOSystem(std::string filename){
  */
 CellWallIOSystem::~CellWallIOSystem(){
 
+  fprintf(stdout, "\n\n\t> Cleaning IO system !\n");
+  fflush(stdout);
   
 }
 
@@ -82,15 +84,14 @@ void CellWallIOSystem::write_coordinate_ascii(CellWallMonolayer *cwm){
   double *xyz = cwm->get_coordinate_array();
   
   open_file(_filename+xyz_ext);
-  
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
+  fflush(stdout);
+
   for(i=0; i< cwm->get_total_npg()*DIM; i+=DIM){
     _output_file << std::setw(20) << xyz[i] << "\t" << xyz[i+1] << "\t" << xyz[i+2] << std::endl;
   }
 
   close_file(_filename + xyz_ext);
-
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
-  fflush(stdout);
 
 }
 
@@ -110,6 +111,8 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
   double *xyz = cwm->get_coordinate_array();
 
   open_file(_filename + ply_ext);
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
+  fflush(stdout);
 
   _output_file << "ply" << std::endl;
   _output_file << "format ascii 1.0" << std::endl;
@@ -124,9 +127,6 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
   }
 
   close_file(_filename + ply_ext);
-
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
-  fflush(stdout);
 
 }
 
@@ -155,6 +155,8 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   int idm=1;
 
   open_file(_filename + pdb_ext);
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", (_filename+pdb_ext).c_str(), _nwrite);
+  fflush(stdout);
 
   _output_file << std::fixed;
 
@@ -202,8 +204,5 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   }
 
   close_file(_filename + pdb_ext);
-
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", (_filename+pdb_ext).c_str(), _nwrite);
-  fflush(stdout);
 
 }

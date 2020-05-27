@@ -4,6 +4,10 @@
 
 /*
  * Constructor
+ * 
+ * Parameters:
+ *              nstrands : number of strands for the cell wall model
+ *              npgstrand : number of masses per strand
  */
 CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
@@ -11,7 +15,14 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
   if( nstrands == 0 || npgstrand == 0 ){
     fprintf(stderr, "\n> Number of strands or number of PG/strands must be != 0\n");
+    fflush(stderr);
     return;
+  }
+
+  if( npgstrand%2 != 0 ){
+    npgstrand++;
+    fprintf(stderr, "\n> Number of PG/strands must be pair because of the bond model\n");
+    fflush(stderr);
   }
 
   _nstrands = nstrands;
@@ -20,8 +31,28 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
   _cellwall_radius = d0_g * npgstrand / (2.0f*PI);
 
+  // total number of glycosidic bond 
+  _nglyco_bonds = npgstrand * nstrands;
+
+  _npepti_bonds = (nstrands-1) * int(npgstrand/2);
+
+  // allocation of masses coordinate array
   coordinate_xyz = new double[DIM * _total_npg];
-  fprintf(stdout, "\n\t> Allocation of coordinate_xyz array\n");
+  _memory_consumption += (sizeof(coordinate_xyz[0])*(DIM*_total_npg)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of coordinate_xyz array");
+  fflush(stdout);
+
+  glyco_bonds = new int[_nglyco_bonds];
+  _memory_consumption += (sizeof(glyco_bonds[0])*(_nglyco_bonds)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of glycosidic bonds array");
+  fflush(stdout);
+
+  pepti_bonds = new int[_npepti_bonds];
+  _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of peptidic bonds array");
+  fflush(stdout);
+
+  fprintf(stdout, "\n\t> Memory consumption : %f MBytes \n", _memory_consumption);
   fflush(stdout);
 
 }
@@ -34,19 +65,19 @@ CellWallMonolayer::~CellWallMonolayer(){
 
   if( coordinate_xyz ){
     delete [] coordinate_xyz;
-    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array\n");
+    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array");
     fflush(stdout);
   }
 
   if( glyco_bonds ){
     delete [] glyco_bonds;
-    fprintf(stdout, "\n\t> Deallocation of glyco_bonds array\n");
+    fprintf(stdout, "\n\t> Deallocation of glyco_bonds array");
     fflush(stdout);
   }
 
   if( pepti_bonds ){
     delete [] pepti_bonds;
-    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array\n");
+    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array");
     fflush(stdout);
   }
 
@@ -71,7 +102,7 @@ CellWallMonolayer::~CellWallMonolayer(){
  */   
 void CellWallMonolayer::generate_geometry(){
 
-  fprintf(stdout, "\n\t> Generate cell wall masses position in 3D coordinate \n");
+  fprintf(stdout, "\n\t> Generate cell wall masses position in 3D coordinate");
   fflush(stdout);
 
   int i, j, offset, offset_0;
@@ -130,8 +161,8 @@ void CellWallMonolayer::generate_geometry(){
     fflush(stdout);
   }
 
-  fprintf(stdout, "\n\t> actual d0_g : %f\n", actual_d0_g);
-  fprintf(stdout, "\n\t> theorical d0_g : %f\n", d0_g);
+  fprintf(stdout, "\n\t\t> actual d0_g : %f", actual_d0_g);
+  fprintf(stdout, "\n\t\t> theorical d0_g : %f\n", d0_g);
   fflush(stdout);
 
 }
@@ -141,15 +172,15 @@ void CellWallMonolayer::generate_geometry(){
  * 
  *        z
  *        |  
- *           *  *--*  *--*  *
+ *           4  9--*  *--*  *
  *           |  |  |  |  |  | 
- *           *--*  *--*  *--* 
+ *           3--8  *--*  *--* 
  *           |  |  |  |  |  |
- *           *  *--*  *--*  *    -> y
+ *           2  7--*  *--*  *    -> y
  *           |  |  |  |  |  |
- *           *--*  *--*  *--*
+ *           1--6  *--*  *--*
  *           |  |  |  |  |  | 
- *           *  *--*  *--*  * 
+ *           0  5--*  *--*  * 
  *       /
  *      x
  *  

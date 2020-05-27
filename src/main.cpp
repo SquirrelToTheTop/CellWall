@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(50, 100);
+	CellWallMonolayer *cwl = new CellWallMonolayer(5, 10);
 
 	cwl->generate_geometry();
 
