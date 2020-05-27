@@ -10,14 +10,6 @@ CellWallIOSystem::CellWallIOSystem(std::string filename){
   fprintf(stdout, "\n\t> Initialize IO system !");
   fflush(stdout);
 
-  _output_file.open(_filename, std::ios::out);
-  if( ! _output_file.is_open() ){
-    fprintf(stderr, "\n\t> Error cannot open file : %s ", _filename.c_str());
-    fflush(stderr);
-  }
-
-  _output_file << std::setprecision(std::numeric_limits<double>::digits10);
-
 }
 
 /*
@@ -26,31 +18,98 @@ CellWallIOSystem::CellWallIOSystem(std::string filename){
  */
 CellWallIOSystem::~CellWallIOSystem(){
 
-  _output_file.close();
-
-  fprintf(stdout, "\n\t> Closing output file : %s \n", _filename.c_str());
-  fflush(stdout);
+  
 }
 
+/*
+ * Open file stream
+ * 
+ * Parameters:
+ *             filename: string containing filename with extension
+ *
+ */
+void CellWallIOSystem::open_file(std::string filename_ext){
+
+  // check if not already open
+  if( ! _output_file.is_open() ){
+
+    _output_file.open(filename_ext, std::ios::out);
+    if( ! _output_file.is_open() ){
+      fprintf(stderr, "\n\t> Error cannot open file : %s ", filename_ext.c_str());
+      fflush(stderr);
+    }
+
+    _output_file << std::setprecision(std::numeric_limits<double>::digits10);
+  
+  }else{
+    fprintf(stderr, "\n\t> Error in open_file : %s, ofstream already open !", filename_ext.c_str());
+    fflush(stderr);
+  }
+
+}
+
+/*
+ * Close file stream
+ * 
+ * Parameters:
+ *             filename_ext: string containing filename with extension
+ *
+ */
+void CellWallIOSystem::close_file(std::string filename_ext){
+  
+  if( _output_file.is_open() ){
+    _output_file.close();
+
+    fprintf(stdout, "\n\t> Closing output file : %s \n", filename_ext.c_str());
+    fflush(stdout);
+  }
+
+}
+
+/*
+ * Write ASCII file with X Y Z coordinate of masses
+ * 
+ * file format : xyz
+ * 
+ * Parameters:
+ *             *cwm : pointer to the CellWallObject
+ *
+ */
 void CellWallIOSystem::write_coordinate_ascii(CellWallMonolayer *cwm){
 
   int i;
 
   double *xyz = cwm->get_coordinate_array();
+  
+  open_file(_filename+xyz_ext);
+  
   for(i=0; i< cwm->get_total_npg()*DIM; i+=DIM){
     _output_file << std::setw(20) << xyz[i] << "\t" << xyz[i+1] << "\t" << xyz[i+2] << std::endl;
   }
+
+  close_file(_filename + xyz_ext);
 
   fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
   fflush(stdout);
 
 }
 
+/*
+ * Write ASCII file with X Y Z coordinate of masses
+ * 
+ * file format: .ply
+ * 
+ * Parameters:
+ *             *cwm : pointer to the CellWallObject
+ *
+ */
 void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
 
   int i;
 
   double *xyz = cwm->get_coordinate_array();
+
+  open_file(_filename + ply_ext);
 
   _output_file << "ply" << std::endl;
   _output_file << "format ascii 1.0" << std::endl;
@@ -64,11 +123,23 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
     _output_file << std::setw(20) << xyz[i] << "\t" << xyz[i+1] << "\t" << xyz[i+2] << std::endl;
   }
 
+  close_file(_filename + ply_ext);
+
   fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
   fflush(stdout);
 
 }
 
+/*
+ * Write ASCII file with X Y Z coordinate of masses and connection
+ * between masses
+ * 
+ * file format: .pdb
+ * 
+ * Parameters:
+ *             *cwm : pointer to the CellWallObject
+ *
+ */
 void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
 
   int i;
@@ -82,6 +153,8 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   double w1=1.0f, w2=0.0f;
   int ipg =1;
   int idm=1;
+
+  open_file(_filename + pdb_ext);
 
   _output_file << std::fixed;
 
@@ -128,7 +201,9 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
     idm++;
   }
 
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
+  close_file(_filename + pdb_ext);
+
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", (_filename+pdb_ext).c_str(), _nwrite);
   fflush(stdout);
 
 }

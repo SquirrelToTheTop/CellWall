@@ -30,10 +30,17 @@ class CellWallIOSystem{
 
   private:
 
+    const std::string pdb_ext=".pdb";
+    const std::string ply_ext=".ply";
+    const std::string xyz_ext=".xyz";
+
     std::ofstream _output_file;
     std::string _filename;
 
     int _nwrite = 0;
+
+    void open_file(std::string filename);
+    void close_file(std::string filename);
 
 };
 
