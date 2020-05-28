@@ -42,6 +42,12 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   fprintf(stdout, "\n\t> Allocation of coordinate_xyz array");
   fflush(stdout);
 
+  // allocation of masses forces array
+  forces_xyz = new double[DIM * _total_npg];
+  _memory_consumption += (sizeof(forces_xyz[0])*(DIM*_total_npg)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of forces_xyz array");
+  fflush(stdout);
+
   // x2 because one bond is made of two masses
   // and glyco_bonds will contains the masses "x" index in coordinate_xyz
   glyco_bonds = new int[_nglyco_bonds * 2];
@@ -66,9 +72,9 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
  */
 CellWallMonolayer::~CellWallMonolayer(){
 
-  if( coordinate_xyz ){
-    delete [] coordinate_xyz;
-    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array");
+  if( pepti_bonds ){
+    delete [] pepti_bonds;
+    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array");
     fflush(stdout);
   }
 
@@ -78,9 +84,15 @@ CellWallMonolayer::~CellWallMonolayer(){
     fflush(stdout);
   }
 
-  if( pepti_bonds ){
-    delete [] pepti_bonds;
-    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array");
+  if( forces_xyz ){
+    delete [] forces_xyz;
+    fprintf(stdout, "\n\t> Deallocation of forces_xyz array");
+    fflush(stdout);
+  }
+
+  if( coordinate_xyz ){
+    delete [] coordinate_xyz;
+    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array");
     fflush(stdout);
   }
 

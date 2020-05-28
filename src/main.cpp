@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "cellWallUtils.h"
 #include "cellWallConfig.h"
 #include "cellWallObject.h"
+#include "cellWallForces.h"
 #include "cellWallIO.h"
 
 #include "cellWallDebug.h"
@@ -17,13 +19,27 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(30, 100);
+	CellWallMonolayer *cwl = new CellWallMonolayer(10, 10);
 
 	cwl->generate_geometry();
 
 	cwl->generate_glycosidic_bonds();
 
+#ifdef DEBUG
 	display_glyco_bonds(cwl);
+#endif
+
+	double energy_glyco;	
+	clock_t start, end;
+	double cpu_time_used;
+
+	start = clock();
+	energy_glyco = compute_energy_gbond(cwl);
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
+	fflush(stdout);
 
 	// iosystem->write_coordinate_ascii_PLY(cwl);
 	iosystem->write_PDB(cwl);

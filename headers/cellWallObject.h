@@ -32,6 +32,9 @@ class CellWallMonolayer{
     // array of coordinate (x1,y1,z1, x2,y2,z2, ...)
     double * coordinate_xyz = nullptr;
 
+    // array of forces acting on each masses (fx1,fy1,fz1, fx2,fy2,fz2, ...)
+    double * forces_xyz = nullptr;
+
     // arrays for glycosidic & peptidics bonds index of arrays gives the bonds number
     // and the arrays are sorted like (i1,j1, i2,j2, i3,j3, in,jn) where i1,j1 is a couple
     // of masses index for the first bond, i2,j2 the second bond, etc. 
