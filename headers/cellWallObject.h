@@ -18,6 +18,7 @@ class CellWallMonolayer{
 
     void generate_geometry(); // generate position of masses in 3D
     void generate_glycosidic_bonds(); // generate glycosidic bonds between masses
+    void generate_peptidic_bonds(); // generate peptidic bonds between masses
 
     // getter
     int get_total_npg(); // get total of masses
@@ -26,7 +27,8 @@ class CellWallMonolayer{
     
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_glycosidic_bonds_array(); // get pointor to glycosidic array
-
+    int * get_peptidic_bonds_array(); // get pointor to peptidic array
+  
   public:
 
     // array of coordinate (x1,y1,z1, x2,y2,z2, ...)

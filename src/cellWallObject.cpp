@@ -183,31 +183,28 @@ void CellWallMonolayer::generate_geometry(){
 }
 
 /*
- * Generate all mass position in 3D coordinate system
+ * Generate array of connection for glycosidic bond
  * 
  *        z
  *        |  
- *           4  9--*  *--*  *
+ *           4  9  *  *  *  *
  *           |  |  |  |  |  | 
- *           3--8  *--*  *--* 
+ *           3  8  *  *  *  * 
  *           |  |  |  |  |  |
- *           2  7--*  *--*  *    -> y
+ *           2  7  *  *  *  *    -> y
  *           |  |  |  |  |  |
- *           1--6  *--*  *--*
+ *           1  6  *  *  *  *
  *           |  |  |  |  |  | 
- *           0  5--*  *--*  * 
+ *           0  5  *  *  *  * 
  *       /
  *      x
  *  
- * x: varies in clock like
- * y: strand coordinate wich increase from a lenght of peptidique spring 
- * z: varies with projection 
  */   
 void CellWallMonolayer::generate_glycosidic_bonds(){
 
   int i, j, mi, mj, bi;
 
-  fprintf(stdout, "\n\t> Generate cell wall masses bonds ... ");
+  fprintf(stdout, "\n\t> Generate cell wall glycosidic springs ... ");
   fflush(stdout);
 
   // glycosidic bonds
@@ -245,6 +242,76 @@ void CellWallMonolayer::generate_glycosidic_bonds(){
 
 }
 
+/*
+ * Generate array of connection for peptidic bond
+ * 
+ *        z
+ *        |   
+ *           3  7--*  *--*  * 
+ *           |  |  |  |  |  |
+ *           2--6  *--*  *--*    -> y
+ *           |  |  |  |  |  |
+ *           1  5--9  *--*  *
+ *           |  |  |  |  |  | 
+ *           0--4  8--*  *--* 
+ *       /
+ *      x
+ *  
+ */   
+void CellWallMonolayer::generate_peptidic_bonds(){
+
+  int i, j, mi, mj, bi;
+
+  fprintf(stdout, "\n\t> Generate cell wall peptidic springs ... ");
+  fflush(stdout);
+
+  // peptidic bonds
+
+  // start @ DIM and +DIM, for the condition if( i%2 == 1 )
+  mi=DIM;
+  mj=(_npgstrand*DIM)+DIM;
+
+  bi=0;
+  for(i=0; i<_nstrands-1; ++i){
+
+    // this allow to switch between odd and even strand
+    // to prevent linking the same mass on the strand before and after
+    // see in description: example masse 0 -- 4 and 4 -- 8 with the switch
+    // the first link will be 5 -- 9 
+    if( (i+1)%2 == 0 ){
+      mi += DIM;
+      mj += DIM;
+    }else{
+      mi -= DIM;
+      mj -= DIM;
+    }
+  
+    for(j=mi; j<((i+1)*_npgstrand)*DIM; j+=(2*DIM)){
+
+      // mi belong to current strand
+      // mj belong to the next strand (left to right, y=0 to y=n)
+
+      pepti_bonds[bi] = mi;
+      pepti_bonds[bi+1] = mj;
+
+      mi += 2*DIM;
+      mj += 2*DIM;
+
+      bi += 2;
+    }
+
+  }
+
+  if( int(bi/2) != _npepti_bonds ){
+    fprintf(stderr, "\n\n\t> Error: N peptidic bonds created (%d) != theorical N %d !", int(bi/2), _npepti_bonds);
+    fflush(stdout);
+  }else{
+    fprintf(stdout, " SUCCESS \n");
+    fflush(stdout);
+  }  
+
+}
+
 /* Getter */
 
 double * CellWallMonolayer::get_coordinate_array(){
@@ -253,6 +320,10 @@ double * CellWallMonolayer::get_coordinate_array(){
 
 int * CellWallMonolayer::get_glycosidic_bonds_array(){
   return glyco_bonds;
+}
+
+int * CellWallMonolayer::get_peptidic_bonds_array(){
+  return pepti_bonds;
 }
 
 int CellWallMonolayer::get_total_npg(){

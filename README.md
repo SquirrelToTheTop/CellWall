@@ -16,3 +16,5 @@ Improved model of Cell Wall
   - OpenMP 201511
 
   One command build : `mkdir build && cd build && cmake .. && make`
+
+  In order to build with debug option use the following command : ` cmake -DBUILD_DEBUG=ON .. && make`. By default debuf is OFF

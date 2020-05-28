@@ -145,7 +145,8 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   int i;
 
   double *xyz = cwm->get_coordinate_array();
-  int *gbond = cwm->get_glycosidic_bonds_array(); 
+  int *gbond = cwm->get_glycosidic_bonds_array();
+  int *pbond = cwm->get_peptidic_bonds_array();
 
   std::string tex = "ATOM";
   std::string res = "GLY";
@@ -207,6 +208,7 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
     idm++;
   }
 
+  // output connection for glyco spring
   for(i=0; i<cwm->get_total_glycobonds()*2; i+=2){
     _output_file << std::setw(5) << conect;
     
@@ -215,6 +217,20 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
     _output_file << buffAsStdStr;
 
     sprintf(&buff[0], "%5d", int(gbond[i+1]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr << std::endl;
+
+  }
+
+  // output connection for pepti spring
+  for(i=0; i<cwm->get_total_peptibonds()*2; i+=2){
+    _output_file << std::setw(5) << conect;
+    
+    sprintf(&buff[0], "%5d", int(pbond[i]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%5d", int(pbond[i+1]/3)+1);
     buffAsStdStr = buff;
     _output_file << buffAsStdStr << std::endl;
 

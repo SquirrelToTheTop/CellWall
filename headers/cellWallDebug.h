@@ -5,5 +5,6 @@
 #include "cellWallObject.h"
 
 void display_glyco_bonds(CellWallMonolayer *cwl);
+void display_pepti_bonds(CellWallMonolayer *cwl);
 
 #endif

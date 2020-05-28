@@ -19,14 +19,17 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(10, 10);
+	CellWallMonolayer *cwl = new CellWallMonolayer(10,20);
 
 	cwl->generate_geometry();
 
 	cwl->generate_glycosidic_bonds();
 
+	cwl->generate_peptidic_bonds();
+
 #ifdef DEBUG
 	display_glyco_bonds(cwl);
+	display_pepti_bonds(cwl);
 #endif
 
 	double energy_glyco;	

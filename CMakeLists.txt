@@ -6,6 +6,12 @@ project(CellWall VERSION 2.0)
 set(cellWall_VERSION_MAJOR 2)
 set(cellWall_VERSION_MINOR 0)
 
+option(BUILD_DEBUG "Build in debug mode" OFF)
+
+if(BUILD_DEBUG)
+  add_definitions(-DDEBUG)
+endif(BUILD_DEBUG)
+
 # include header directory
 set(CellWall_h_dir ${PROJECT_SOURCE_DIR}/headers)
 include_directories(${CellWall_h_dir})
