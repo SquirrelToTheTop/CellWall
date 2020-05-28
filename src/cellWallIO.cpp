@@ -145,11 +145,15 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   int i;
 
   double *xyz = cwm->get_coordinate_array();
+  int *gbond = cwm->get_glycosidic_bonds_array(); 
 
   std::string tex = "ATOM";
   std::string res = "GLY";
   std::string typ = "LAM";
   std::string segid = "CP";
+  std::string conect= "CONECT";
+  std::string end = "END";
+
   double w1=1.0f, w2=0.0f;
   int ipg =1;
   int idm=1;
@@ -202,6 +206,21 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
 
     idm++;
   }
+
+  for(i=0; i<cwm->get_total_glycobonds()*2; i+=2){
+    _output_file << std::setw(5) << conect;
+    
+    sprintf(&buff[0], "%5d", int(gbond[i]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%5d", int(gbond[i+1]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr << std::endl;
+
+  }
+
+  _output_file << std::setw(3) << end;
 
   close_file(_filename + pdb_ext);
 

@@ -26,6 +26,7 @@ add_library(${PROJECT_NAME}_obj SHARED ${PROJECT_SOURCE_DIR}/src/cellWallUtils.c
                                        ${PROJECT_SOURCE_DIR}/src/cellWallIO.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallForces.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallObject.cpp
+                                       ${PROJECT_SOURCE_DIR}/src/cellWallDebug.cpp
 )
 
 target_compile_options(${PROJECT_NAME}_obj PRIVATE -O3 -Wall -g -fPIC ${OpenMP_C_FLAGS} -lm)

@@ -42,13 +42,16 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   fprintf(stdout, "\n\t> Allocation of coordinate_xyz array");
   fflush(stdout);
 
-  glyco_bonds = new int[_nglyco_bonds];
-  _memory_consumption += (sizeof(glyco_bonds[0])*(_nglyco_bonds)) / (MBYTES);
+  // x2 because one bond is made of two masses
+  // and glyco_bonds will contains the masses "x" index in coordinate_xyz
+  glyco_bonds = new int[_nglyco_bonds * 2];
+  _memory_consumption += (sizeof(glyco_bonds[0])*(_nglyco_bonds*2)) / (MBYTES);
   fprintf(stdout, "\n\t> Allocation of glycosidic bonds array");
   fflush(stdout);
 
-  pepti_bonds = new int[_npepti_bonds];
-  _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds)) / (MBYTES);
+  // same idea as glyco_bonds
+  pepti_bonds = new int[_npepti_bonds * 2];
+  _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds*2)) / (MBYTES);
   fprintf(stdout, "\n\t> Allocation of peptidic bonds array");
   fflush(stdout);
 
@@ -188,17 +191,47 @@ void CellWallMonolayer::generate_geometry(){
  * y: strand coordinate wich increase from a lenght of peptidique spring 
  * z: varies with projection 
  */   
-void CellWallMonolayer::generate_bonds(){
+void CellWallMonolayer::generate_glycosidic_bonds(){
 
-  fprintf(stdout, "\n\t> Generate cell wall masses bonds \n");
+  int i, j, mi, mj, bi;
+
+  fprintf(stdout, "\n\t> Generate cell wall masses bonds ... ");
   fflush(stdout);
 
+  // glycosidic bonds
+  mi=0;
+  mj=DIM;
+  bi=0;
+  for(i=0; i<_nstrands; ++i){
+    
+    for(j=0; j<_npgstrand-1; ++j){
+      glyco_bonds[bi] = mi;
+      glyco_bonds[bi+1] = mj;
 
+      mi += DIM;
+      mj += DIM;
+      bi += 2;
+    }
 
+    // link last mass of strand and first of strand (circle)
+    glyco_bonds[bi] = mj- DIM;
+    glyco_bonds[bi+1] = mi - (_npgstrand-1)*DIM ;
+    bi += 2;
+
+    // next strands
+    mi += DIM;
+    mj += DIM;
+  }
+
+  if( int(bi/2) != _nglyco_bonds ){
+    fprintf(stderr, "\n\t> Error: number of glycosidc bonds created != theorical number of bonds !");
+    fflush(stdout);
+  }else{
+    fprintf(stdout, " SUCCESS \n");
+    fflush(stdout);
+  }  
 
 }
-
-
 
 /* Getter */
 
@@ -206,7 +239,20 @@ double * CellWallMonolayer::get_coordinate_array(){
   return coordinate_xyz;
 }
 
+int * CellWallMonolayer::get_glycosidic_bonds_array(){
+  return glyco_bonds;
+}
+
 int CellWallMonolayer::get_total_npg(){
   return _total_npg;
 }
+
+int CellWallMonolayer::get_total_glycobonds(){
+  return _nglyco_bonds;
+}
+
+int CellWallMonolayer::get_total_peptibonds(){
+  return _npepti_bonds;
+}
+
 

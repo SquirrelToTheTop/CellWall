@@ -6,6 +6,8 @@
 #include "cellWallObject.h"
 #include "cellWallIO.h"
 
+#include "cellWallDebug.h"
+
 int main(int argc, char *argv[]){
 
 	printf("\n> Major Version %d \n", cellWall_VERSION_MAJOR);
@@ -15,11 +17,13 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(5, 10);
+	CellWallMonolayer *cwl = new CellWallMonolayer(30, 100);
 
 	cwl->generate_geometry();
 
-	cwl->generate_bonds();
+	cwl->generate_glycosidic_bonds();
+
+	display_glyco_bonds(cwl);
 
 	// iosystem->write_coordinate_ascii_PLY(cwl);
 	iosystem->write_PDB(cwl);
