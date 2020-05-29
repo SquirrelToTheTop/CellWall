@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 	display_pepti_bonds(cwl);
 #endif
 
-	double energy_glyco;	
+	double energy_glyco, energy_pepti;
 	clock_t start, end;
 	double cpu_time_used;
 
@@ -42,6 +42,16 @@ int main(int argc, char *argv[]){
 	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
 	fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
+	fflush(stdout);
+
+	// Should be null at begining because by construction the distance between two
+	// strand is equal to d0_p which is the lenght of the spring at rest
+	start = clock();
+	energy_pepti = compute_energy_pbond(cwl);
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	fprintf(stdout,"\n\t> Total energy of peptidic bonds : %f nJ - elapsed : %f ", energy_pepti, cpu_time_used);
 	fflush(stdout);
 
 	// iosystem->write_coordinate_ascii_PLY(cwl);
