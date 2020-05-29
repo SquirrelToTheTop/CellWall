@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(4,8);
+	CellWallMonolayer *cwl = new CellWallMonolayer(20,50);
 
 	cwl->generate_geometry();
 
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
 	display_glyco_glyco_angles(cwl);
 #endif
 
-	double energy_glyco, energy_pepti;
+	double energy_glyco, energy_pepti, energy_glyco_glyco;
 	clock_t start, end;
 	double cpu_time_used;
 
@@ -43,6 +43,14 @@ int main(int argc, char *argv[]){
 	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
 	fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
+	fflush(stdout);
+
+	start = clock();
+	energy_glyco_glyco = compute_energy_gg_angles(cwl);
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	fprintf(stdout,"\n\t> Total energy of glyco-glyco angles : %f nJ - elapsed : %f ", energy_glyco_glyco, cpu_time_used);
 	fflush(stdout);
 
 	// Should be null at begining because by construction the distance between two

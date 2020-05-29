@@ -10,4 +10,7 @@ double compute_energy_gbond(CellWallMonolayer *cwl);
 /* Compute energy of peptidic springs */
 double compute_energy_pbond(CellWallMonolayer *cwl);
 
+/* Compute energy of bending for glycosidic - glycosidic */
+double compute_energy_gg_angles(CellWallMonolayer *cwl);
+
 #endif
