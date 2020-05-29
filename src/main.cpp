@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(10,20);
+	CellWallMonolayer *cwl = new CellWallMonolayer(4,8);
 
 	cwl->generate_geometry();
 
@@ -30,6 +30,7 @@ int main(int argc, char *argv[]){
 #ifdef DEBUG
 	display_glyco_bonds(cwl);
 	display_pepti_bonds(cwl);
+	display_glyco_glyco_angles(cwl);
 #endif
 
 	double energy_glyco, energy_pepti;

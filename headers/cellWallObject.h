@@ -23,6 +23,7 @@ class CellWallMonolayer{
     // getter
     int get_total_npg(); // get total of masses
     int get_total_glycobonds(); // get total number of glycosidic bonds
+    int get_total_gg_angles(); // get total number of glycosidic - glycosidic angles
     int get_total_peptibonds(); // get total number of peptidic bonds
     
     double * get_coordinate_array(); // get pointor to coordinate array
@@ -46,6 +47,11 @@ class CellWallMonolayer{
     int * glyco_bonds = nullptr; 
     int * pepti_bonds = nullptr;
 
+    // Array of bonds index which are connected to the same mass, thus forming
+    // an angle. So: gg_angles[i] and gg_angles[i+1] refer to the i-th bond in glyco_bonds
+    // and the (i+1)-th bond in glyco_bonds array
+    int * gg_angles = nullptr;
+
     // memory info in MBytes
     double _memory_consumption = 0.0f;
 
@@ -54,6 +60,7 @@ class CellWallMonolayer{
     int _npgstrand = 0; // number of peptidoglycans per strand
     int _total_npg = 0; // total number of peptidoglycans
     int _nglyco_bonds = 0; // number of peptidic bonds (bond between masses on same strand)
+    int _nglyco_glyco_angles = 0; // number of glycosidic-glycosidic angles
     int _npepti_bonds = 0; // number of peptidic bonds (bond between masses on different strand)
 
     double _cellwall_radius = 0.0f;
