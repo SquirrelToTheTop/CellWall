@@ -11,6 +11,8 @@
  */
 CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
+  int i;
+
   fprintf(stdout, "\n> Ask for new cell wall monolayer! \n");
 
   if( nstrands == 0 || npgstrand == 0 ){
@@ -48,6 +50,11 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   // allocation of masses forces array
   forces_xyz = new double[DIM * _total_npg];
   _memory_consumption += (sizeof(forces_xyz[0])*(DIM*_total_npg)) / (MBYTES);
+  
+  // set all forces to 0.0f at the begining of the simulation
+  for(i=0; i<DIM*_total_npg; ++i )
+    forces_xyz[i] = 0.0f;
+
   fprintf(stdout, "\n\t> Allocation of forces_xyz array");
   fflush(stdout);
 
@@ -111,6 +118,24 @@ CellWallMonolayer::~CellWallMonolayer(){
     fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array");
     fflush(stdout);
   }
+
+}
+
+/*
+ * Output information about the simulation parameters
+ * 
+ */
+void CellWallMonolayer::simulation_infos(){
+
+  fprintf(stdout, "\n\t> Simulation parameters : \n");
+  fprintf(stdout, "\n\t\t> Number of strands : %d", _nstrands);
+  fprintf(stdout, "\n\t\t> Number of pg/strands : %d", _npgstrand);
+  fprintf(stdout, "\n\t\t> Total number of PG: %d\n", _total_npg);
+  fprintf(stdout, "\n\t\t> CellWall radius: %f nm\n", _cellwall_radius);
+  fprintf(stdout, "\n\t\t> Total number of G-springs: %d", _nglyco_bonds);
+  fprintf(stdout, "\n\t\t> Total number of G-G angles: %d", _nglyco_glyco_angles);
+  fprintf(stdout, "\n\t\t> Total number of P-springs: %d\n", _npepti_bonds);
+  fflush(stdout);
 
 }
 
@@ -375,6 +400,18 @@ int CellWallMonolayer::get_total_gg_angles(){
 
 int CellWallMonolayer::get_total_peptibonds(){
   return _npepti_bonds;
+}
+
+double CellWallMonolayer::get_cw_radius(){
+  return _cellwall_radius;
+}
+
+int CellWallMonolayer::get_number_of_strands(){
+  return _nstrands;
+}
+
+int CellWallMonolayer::get_number_of_pg_strand(){
+  return _npgstrand;
 }
 
 

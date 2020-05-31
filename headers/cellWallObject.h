@@ -25,10 +25,16 @@ class CellWallMonolayer{
     int get_total_glycobonds(); // get total number of glycosidic bonds
     int get_total_gg_angles(); // get total number of glycosidic - glycosidic angles
     int get_total_peptibonds(); // get total number of peptidic bonds
+    double get_cw_radius(); // get computed radius
+    int get_number_of_strands(); // get number of strands
+    int get_number_of_pg_strand(); // get number of pg per strands
     
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_glycosidic_bonds_array(); // get pointor to glycosidic array
     int * get_peptidic_bonds_array(); // get pointor to peptidic array
+
+    // display import information about the cellwall model
+    void simulation_infos();
   
   public:
 

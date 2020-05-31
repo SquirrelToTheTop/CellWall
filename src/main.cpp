@@ -8,7 +8,9 @@
 #include "cellWallForces.h"
 #include "cellWallIO.h"
 
+#ifdef DEBUG
 #include "cellWallDebug.h"
+#endif
 
 int main(int argc, char *argv[]){
 
@@ -19,7 +21,9 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(20,50);
+	CellWallMonolayer *cwl = new CellWallMonolayer(4,8);
+
+	cwl->simulation_infos();
 
 	cwl->generate_geometry();
 
@@ -37,34 +41,51 @@ int main(int argc, char *argv[]){
 	clock_t start, end;
 	double cpu_time_used;
 
-	start = clock();
-	energy_glyco = compute_energy_gbond(cwl);
-	end = clock();
-	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	int i, iter, nitermax = 5;
 
-	fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
-	fflush(stdout);
+	for(iter=0; iter<nitermax; ++iter){
 
-	start = clock();
-	energy_glyco_glyco = compute_energy_gg_angles(cwl);
-	end = clock();
-	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+		fprintf(stdout,"\n> Iteration # %d ", iter);
+		fflush(stdout);
 
-	fprintf(stdout,"\n\t> Total energy of glyco-glyco angles : %f nJ - elapsed : %f ", energy_glyco_glyco, cpu_time_used);
-	fflush(stdout);
+		start = clock();
+		energy_glyco = compute_energy_gbond(cwl);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-	// Should be null at begining because by construction the distance between two
-	// strand is equal to d0_p which is the lenght of the spring at rest
-	start = clock();
-	energy_pepti = compute_energy_pbond(cwl);
-	end = clock();
-	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+		fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
+		fflush(stdout);
 
-	fprintf(stdout,"\n\t> Total energy of peptidic bonds : %f nJ - elapsed : %f ", energy_pepti, cpu_time_used);
-	fflush(stdout);
+		start = clock();
+		energy_glyco_glyco = compute_energy_gg_angles(cwl);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-	// iosystem->write_coordinate_ascii_PLY(cwl);
-	iosystem->write_PDB(cwl);
+		fprintf(stdout,"\n\t> Total energy of glyco-glyco angles : %f nJ - elapsed : %f ", energy_glyco_glyco, cpu_time_used);
+		fflush(stdout);
+
+		// Should be null at begining because by construction the distance between two
+		// strand is equal to d0_p which is the lenght of the spring at rest
+		start = clock();
+		energy_pepti = compute_energy_pbond(cwl);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		fprintf(stdout,"\n\t> Total energy of peptidic bonds : %f nJ - elapsed : %f \n", energy_pepti, cpu_time_used);
+		fflush(stdout);
+
+		// mini integration 
+		// double dt=0.00001f;
+		// for(i=0; i<cwl->get_total_npg()*DIM; i+=DIM){
+		// 	cwl->coordinate_xyz[i] -= dt * cwl->forces_xyz[i];
+		// 	cwl->coordinate_xyz[i+1] -= dt * cwl->forces_xyz[i+1];
+		// 	cwl->coordinate_xyz[i+2] -= dt * cwl->forces_xyz[i+2];
+		// }
+
+		// iosystem->write_coordinate_ascii_PLY(cwl);
+		iosystem->write_PDB(cwl, iter);
+
+	}
 
 	delete cwl;
 	delete iosystem;

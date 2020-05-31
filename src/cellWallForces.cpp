@@ -17,7 +17,7 @@
 double compute_energy_gbond(CellWallMonolayer *cwl){
   
   int i, mi, mj;
-  double d, x, y , z;
+  double dij, x, y , z, tmp;
   double g_energy = 0.0f;
 
   for(i=0; i<cwl->get_total_glycobonds()*2; i+=2){
@@ -28,9 +28,20 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
     y = cwl->coordinate_xyz[mj+1] - cwl->coordinate_xyz[mi+1];
     z = cwl->coordinate_xyz[mj+2] - cwl->coordinate_xyz[mi+2];
 
-    d = sqrt(x*x + y*y + z*z) - d0_g;
+    dij = sqrt(x*x + y*y + z*z);
 
-    g_energy += d*d;
+    tmp = stiffness_g * (dij - d0_g) / dij;
+    dij = dij - d0_g;
+
+    cwl->forces_xyz[mi] += tmp * x;
+    cwl->forces_xyz[mi+1] += tmp * y;
+    cwl->forces_xyz[mi+2] += tmp * z;
+
+    cwl->forces_xyz[mj] -= tmp * x;
+    cwl->forces_xyz[mj+1] -= tmp * y;
+    cwl->forces_xyz[mj+2] -= tmp * z;
+
+    g_energy += dij * dij;
   }
 
   g_energy = g_energy * 0.5f * stiffness_g;
@@ -79,6 +90,7 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
     theta = acos( pscal/(norm_ij*norm_jk) );
 
     gg_energy += (theta-alpha0_gg)*(theta-alpha0_gg);
+    
   }
 
   gg_energy = gg_energy * 0.5f * stiffness_gg;
@@ -103,7 +115,7 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
 double compute_energy_pbond(CellWallMonolayer *cwl){
   
   int i, mi, mj;
-  double d, x, y , z;
+  double dij, x, y , z, tmp;
   double p_energy = 0.0f;
 
   for(i=0; i<cwl->get_total_peptibonds()*2; i+=2){
@@ -114,9 +126,20 @@ double compute_energy_pbond(CellWallMonolayer *cwl){
     y = cwl->coordinate_xyz[mj+1] - cwl->coordinate_xyz[mi+1];
     z = cwl->coordinate_xyz[mj+2] - cwl->coordinate_xyz[mi+2];
 
-    d = sqrt(x*x + y*y + z*z) - d0_p;
+    dij = sqrt(x*x + y*y + z*z);
 
-    p_energy += d*d;
+    tmp = stiffness_g * (dij - d0_p) / dij;
+    dij = dij - d0_p;
+
+    cwl->forces_xyz[mi] += tmp * x;
+    cwl->forces_xyz[mi+1] += tmp * y;
+    cwl->forces_xyz[mi+2] += tmp * z;
+
+    cwl->forces_xyz[mj] -= tmp * x;
+    cwl->forces_xyz[mj+1] -= tmp * y;
+    cwl->forces_xyz[mj+2] -= tmp * z;
+
+    p_energy += dij * dij;
   }
 
   p_energy = p_energy * 0.5f * stiffness_p;

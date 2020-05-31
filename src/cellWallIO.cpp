@@ -140,7 +140,7 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
  *             *cwm : pointer to the CellWallObject
  *
  */
-void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
+void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
 
   int i;
 
@@ -159,8 +159,12 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
   int ipg =1;
   int idm=1;
 
-  open_file(_filename + pdb_ext);
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", (_filename+pdb_ext).c_str(), _nwrite);
+  std::string output_filename;
+
+  output_filename = _filename + "_" + std::to_string(output_number) + pdb_ext;
+
+  open_file(output_filename);
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
   fflush(stdout);
 
   _output_file << std::fixed;
@@ -238,6 +242,6 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm){
 
   _output_file << std::setw(3) << end;
 
-  close_file(_filename + pdb_ext);
+  close_file(output_filename);
 
 }

@@ -26,7 +26,7 @@ class CellWallIOSystem{
     void write_coordinate_ascii(CellWallMonolayer *);
     void write_coordinate_ascii_PLY(CellWallMonolayer *);
 
-    void write_PDB(CellWallMonolayer *);
+    void write_PDB(CellWallMonolayer *, int);
 
   private:
 

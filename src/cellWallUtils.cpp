@@ -1,6 +1,8 @@
 #include <stdio.h>
+
 #include "cellWallUtils.h"
 
+// Sexy and entertaining welcome message
 void welcome_message(){
 
   fprintf(stdout, "\n    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    \n");
