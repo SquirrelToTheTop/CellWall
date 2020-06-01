@@ -28,6 +28,8 @@ class CellWallMonolayer{
     double get_cw_radius(); // get computed radius
     int get_number_of_strands(); // get number of strands
     int get_number_of_pg_strand(); // get number of pg per strands
+    double get_radius(); // get the radius of the cell wall
+    double get_length(); // get the length of the cell wall
     
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_glycosidic_bonds_array(); // get pointor to glycosidic array
@@ -70,7 +72,7 @@ class CellWallMonolayer{
     int _npepti_bonds = 0; // number of peptidic bonds (bond between masses on different strand)
 
     double _cellwall_radius = 0.0f;
-
+    double _cellwall_length = 0.0f;
 };
 
 #endif

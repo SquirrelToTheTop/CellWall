@@ -5,6 +5,7 @@
 #include "cellWallUtils.h"
 #include "cellWallConfig.h"
 #include "cellWallObject.h"
+#include "cellWallLipidLayer.h"
 #include "cellWallForces.h"
 #include "cellWallIO.h"
 
@@ -22,14 +23,15 @@ int main(int argc, char *argv[]){
 	welcome_message();
 
 	CellWallMonolayer *cwl = new CellWallMonolayer(4,8);
+	CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
+	                                                    cwl->get_number_of_strands());
 
 	cwl->simulation_infos();
-
 	cwl->generate_geometry();
-
 	cwl->generate_glycosidic_bonds();
-
 	cwl->generate_peptidic_bonds();
+
+	llayer->simulation_infos();
 
 #ifdef DEBUG
 	display_glyco_bonds(cwl);
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]){
 	clock_t start, end;
 	double cpu_time_used;
 
-	int i, iter, nitermax = 5;
+	int iter, nitermax = 5;
 
 	for(iter=0; iter<nitermax; ++iter){
 

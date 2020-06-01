@@ -32,6 +32,7 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   _total_npg = nstrands * npgstrand;
 
   _cellwall_radius = d0_g * npgstrand / (2.0f*PI);
+  _cellwall_length = (nstrands-1) * d0_p;
 
   // total number of glycosidic bond 
   _nglyco_bonds = npgstrand * nstrands;
@@ -127,11 +128,12 @@ CellWallMonolayer::~CellWallMonolayer(){
  */
 void CellWallMonolayer::simulation_infos(){
 
-  fprintf(stdout, "\n\t> Simulation parameters : \n");
+  fprintf(stdout, "\n\t> Simulation parameters for the cellwall : \n");
   fprintf(stdout, "\n\t\t> Number of strands : %d", _nstrands);
   fprintf(stdout, "\n\t\t> Number of pg/strands : %d", _npgstrand);
   fprintf(stdout, "\n\t\t> Total number of PG: %d\n", _total_npg);
-  fprintf(stdout, "\n\t\t> CellWall radius: %f nm\n", _cellwall_radius);
+  fprintf(stdout, "\n\t\t> CellWall radius: %f nm", _cellwall_radius);
+  fprintf(stdout, "\n\t\t> CellWall length: %f nm\n", _cellwall_length);
   fprintf(stdout, "\n\t\t> Total number of G-springs: %d", _nglyco_bonds);
   fprintf(stdout, "\n\t\t> Total number of G-G angles: %d", _nglyco_glyco_angles);
   fprintf(stdout, "\n\t\t> Total number of P-springs: %d\n", _npepti_bonds);
@@ -249,7 +251,7 @@ void CellWallMonolayer::generate_glycosidic_bonds(){
 
   int i, j, mi, mj, ai, bi;
 
-  fprintf(stdout, "\n\t> Generate cell wall glycosidic springs ... ");
+  fprintf(stdout, "\t> Generate cell wall glycosidic springs ... ");
   fflush(stdout);
 
   // glycosidic bonds
@@ -322,7 +324,7 @@ void CellWallMonolayer::generate_peptidic_bonds(){
 
   int i, j, mi, mj, bi;
 
-  fprintf(stdout, "\n\t> Generate cell wall peptidic springs ... ");
+  fprintf(stdout, "\t> Generate cell wall peptidic springs ... ");
   fflush(stdout);
 
   // peptidic bonds
@@ -414,4 +416,11 @@ int CellWallMonolayer::get_number_of_pg_strand(){
   return _npgstrand;
 }
 
+double CellWallMonolayer::get_radius(){
+  return _cellwall_radius;
+}
+
+double CellWallMonolayer::get_length(){
+  return _cellwall_length;
+}
 
