@@ -21,6 +21,9 @@ class CellWallLipidLayer{
 
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_lipidic_bonds_array(); // get pointor to lipidic array
+    int get_total_lipids(); // get total number of lipids
+    int get_total_lbonds(); // get toal number of bonds
+    double get_spring_d0(); // return computed d0_l for lipidic spring
 
     // display import information about the cellwall model
     void simulation_infos();
@@ -41,6 +44,11 @@ class CellWallLipidLayer{
     // i1=0, j1=3
     int * lipidic_bonds = nullptr; 
 
+    // Not the same structure as glyco_angles, pepti_angles. Here, we do not
+    // use the bonds index but the masses index. Firstly, because we won't remove
+    // any springs from the lipid layer. Secondly, we need to compute some crazy stuff 
+    // and put the masses index is easier. So let makes our life easier =)
+    int * ll_angles = nullptr;
 
     // memory info in MBytes
     double _memory_consumption = 0.0f;

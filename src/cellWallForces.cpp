@@ -147,3 +147,50 @@ double compute_energy_pbond(CellWallMonolayer *cwl){
   return p_energy;
 
 }
+
+
+/*
+* Compute the total energy of lipidic springs according to
+* the equation of spring : e = 0.5 * k_l * (||r2-r1|| - d0_l)^2
+* (euclidian norme used)
+* 
+* Parameters:
+*             cellwall object, use coordinate array and lipidic bonds
+* 
+*/
+double compute_energy_lbond(CellWallLipidLayer *ll){
+  
+  int i, mi, mj;
+  double dij, x, y , z, tmp;
+  double l_energy = 0.0f;
+  double at_rest = ll->get_spring_d0();
+
+  for(i=0; i<ll->get_total_lbonds()*2; i+=2){
+    mi = ll->lipidic_bonds[i];
+    mj = ll->lipidic_bonds[i+1];
+
+    x = ll->coordinate_xyz[mj] - ll->coordinate_xyz[mi];
+    y = ll->coordinate_xyz[mj+1] - ll->coordinate_xyz[mi+1];
+    z = ll->coordinate_xyz[mj+2] - ll->coordinate_xyz[mi+2];
+
+    dij = sqrt(x*x + y*y + z*z);
+
+    tmp = stiffness_l * (dij - at_rest) / dij;
+    dij = dij - at_rest;
+
+    ll->forces_xyz[mi] += tmp * x;
+    ll->forces_xyz[mi+1] += tmp * y;
+    ll->forces_xyz[mi+2] += tmp * z;
+
+    ll->forces_xyz[mj] -= tmp * x;
+    ll->forces_xyz[mj+1] -= tmp * y;
+    ll->forces_xyz[mj+2] -= tmp * z;
+
+    l_energy += dij * dij;
+  }
+
+  l_energy = l_energy * 0.5f * stiffness_l;
+
+  return l_energy;
+
+}

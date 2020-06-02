@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(4,8);
+	CellWallMonolayer *cwl = new CellWallMonolayer(50,100);
 	CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
 	                                                    cwl->get_number_of_strands());
 
@@ -32,6 +32,8 @@ int main(int argc, char *argv[]){
 	cwl->generate_peptidic_bonds();
 
 	llayer->simulation_infos();
+	llayer->generate_geometry();
+	llayer->generate_bonds();
 
 #ifdef DEBUG
 	display_glyco_bonds(cwl);
@@ -39,11 +41,11 @@ int main(int argc, char *argv[]){
 	display_glyco_glyco_angles(cwl);
 #endif
 
-	double energy_glyco, energy_pepti, energy_glyco_glyco;
+	double energy_glyco, energy_pepti, energy_glyco_glyco, energy_lipid;
 	clock_t start, end;
 	double cpu_time_used;
 
-	int iter, nitermax = 5;
+	int iter, nitermax = 2;
 
 	for(iter=0; iter<nitermax; ++iter){
 
@@ -55,7 +57,7 @@ int main(int argc, char *argv[]){
 		end = clock();
 		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-		fprintf(stdout,"\n\t> Total energy of glycosidic bonds : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
+		fprintf(stdout,"\n\t> Total energy of glycosidic springs : %f nJ - elapsed : %f ", energy_glyco, cpu_time_used);
 		fflush(stdout);
 
 		start = clock();
@@ -73,8 +75,17 @@ int main(int argc, char *argv[]){
 		end = clock();
 		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-		fprintf(stdout,"\n\t> Total energy of peptidic bonds : %f nJ - elapsed : %f \n", energy_pepti, cpu_time_used);
+		fprintf(stdout,"\n\t> Total energy of peptidic springs : %f nJ - elapsed : %f ", energy_pepti, cpu_time_used);
 		fflush(stdout);
+
+		start = clock();
+		energy_lipid = compute_energy_lbond(llayer);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		fprintf(stdout,"\n\t> Total energy of lipidic springs : %f nJ - elapsed : %f \n", energy_lipid, cpu_time_used);
+		fflush(stdout);
+
 
 		// mini integration 
 		// double dt=0.00001f;
@@ -86,9 +97,11 @@ int main(int argc, char *argv[]){
 
 		// iosystem->write_coordinate_ascii_PLY(cwl);
 		iosystem->write_PDB(cwl, iter);
+		iosystem->write_PDB(llayer, iter);
 
 	}
 
+	delete llayer;
 	delete cwl;
 	delete iosystem;
 

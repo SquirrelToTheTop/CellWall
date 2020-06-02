@@ -12,6 +12,7 @@
 #include <string>
 
 #include "cellWallObject.h"
+#include "cellWallLipidLayer.h"
 
 /*
  * Class to define the IO system
@@ -27,6 +28,7 @@ class CellWallIOSystem{
     void write_coordinate_ascii_PLY(CellWallMonolayer *);
 
     void write_PDB(CellWallMonolayer *, int);
+    void write_PDB(CellWallLipidLayer *, int);
 
   private:
 

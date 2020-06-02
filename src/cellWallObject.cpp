@@ -63,7 +63,7 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   // and glyco_bonds will contains the masses "x" index in coordinate_xyz
   glyco_bonds = new int[_nglyco_bonds * 2];
   _memory_consumption += (sizeof(glyco_bonds[0])*(_nglyco_bonds*2)) / (MBYTES);
-  fprintf(stdout, "\n\t> Allocation of glycosidic bonds array");
+  fprintf(stdout, "\n\t> Allocation of glycosidic springs array");
   fflush(stdout);
 
   // same idea as glyco_bonds
@@ -77,7 +77,6 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*2)) / (MBYTES);
   fprintf(stdout, "\n\t> Allocation of glyco-glyco angles array");
   fflush(stdout);
-
 
   fprintf(stdout, "\n\t> Memory consumption : %f MBytes \n", _memory_consumption);
   fflush(stdout);

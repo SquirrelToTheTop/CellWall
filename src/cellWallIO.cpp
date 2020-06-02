@@ -132,7 +132,7 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
 
 /*
  * Write ASCII file with X Y Z coordinate of masses and connection
- * between masses
+ * between masses for the cell wall layer
  * 
  * file format: .pdb
  * 
@@ -161,7 +161,7 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
 
   std::string output_filename;
 
-  output_filename = _filename + "_" + std::to_string(output_number) + pdb_ext;
+  output_filename = _filename + "_cw_" + std::to_string(output_number) + pdb_ext;
 
   open_file(output_filename);
   fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
@@ -235,6 +235,107 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
     _output_file << buffAsStdStr;
 
     sprintf(&buff[0], "%5d", int(pbond[i+1]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr << std::endl;
+
+  }
+
+  _output_file << std::setw(3) << end;
+
+  close_file(output_filename);
+
+}
+
+/*
+ * Write ASCII file with X Y Z coordinate of masses and connection
+ * between masses for the cell wall layer
+ * 
+ * file format: .pdb
+ * 
+ * Parameters:
+ *             *cwm : pointer to the CellWallObject
+ *
+ */
+void CellWallIOSystem::write_PDB(CellWallLipidLayer *lpl, int output_number){
+
+  int i;
+
+  double *xyz = lpl->get_coordinate_array();
+  int *lbond = lpl->get_lipidic_bonds_array();
+
+  std::string tex = "ATOM";
+  std::string res = "GLY";
+  std::string typ = "LAM";
+  std::string segid = "CP";
+  std::string conect= "CONECT";
+  std::string end = "END";
+
+  double w1=1.0f, w2=0.0f;
+  int ipg =1;
+  int idm=1;
+
+  std::string output_filename;
+
+  output_filename = _filename + "_layer_" + std::to_string(output_number) + pdb_ext;
+
+  open_file(output_filename);
+  fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
+  fflush(stdout);
+
+  _output_file << std::fixed;
+
+  char buff[13];
+  std::string buffAsStdStr;
+
+  for(i=0; i< lpl->get_total_lipids()*DIM; i+=DIM){
+ 
+    _output_file << std::left << std::setw(6) << tex;
+    
+    sprintf(&buff[0], "%5d", idm);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+    
+    _output_file << "  " << std::setw(3) << typ << " " << std::setw(3) << res << " ";
+
+    sprintf(&buff[0], "%5d", ipg);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr << "   ";
+
+    // because C++ sucks so damn much 
+    sprintf(&buff[0], "%8.3f", xyz[i]);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%8.3f", xyz[i+1]);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%8.3f", xyz[i+2]);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%6.2f", w1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%6.2f", w2);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    _output_file << " " << std::fixed << std::setw(4) << segid << std::endl;
+
+    idm++;
+  }
+
+  // output connection for glyco spring
+  for(i=0; i<lpl->get_total_lbonds()*2; i+=2){
+    _output_file << std::setw(5) << conect;
+    
+    sprintf(&buff[0], "%5d", int(lbond[i]/3)+1);
+    buffAsStdStr = buff;
+    _output_file << buffAsStdStr;
+
+    sprintf(&buff[0], "%5d", int(lbond[i+1]/3)+1);
     buffAsStdStr = buff;
     _output_file << buffAsStdStr << std::endl;
 
