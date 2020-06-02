@@ -48,6 +48,9 @@ CellWallLipidLayer::CellWallLipidLayer(double cw_radius, double cw_length, int c
   // total number of lipid-lipid angles (only 'Pi' angles)
   _nlipid_lipid_angles = _total_nlp + (_nstrands-2)*_nlpstrand;
 
+  // total number of mesh element
+  _nlipidic_mesh = (_total_nlp - _nlpstrand)*2;
+
   // allocation of masses coordinate array
   coordinate_xyz = new double[DIM * _total_nlp];
   _memory_consumption += (sizeof(coordinate_xyz[0]) * (DIM *_total_nlp)) / (MBYTES);
@@ -80,6 +83,13 @@ CellWallLipidLayer::CellWallLipidLayer(double cw_radius, double cw_length, int c
   fprintf(stdout, "\n\t> Allocation of lipid-lipid (Pi) angles array");
   fflush(stdout);
 
+  // array of index of masses for lipidi mesh, 
+  // lipidic_mesh[i], lipidic_mesh[i+1], lipidic_mesh[i+2] is one triangle
+  lipidic_mesh = new int[_nlipidic_mesh * 3];
+  _memory_consumption += (sizeof(lipidic_mesh[0]) * (_nlipidic_mesh * 3)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of lipidic mesh array");
+  fflush(stdout);
+
   fprintf(stdout, "\n\t> Memory consumption : %f MBytes \n", _memory_consumption);
   fflush(stdout);
 
@@ -90,6 +100,12 @@ CellWallLipidLayer::CellWallLipidLayer(double cw_radius, double cw_length, int c
  *
  */
 CellWallLipidLayer::~CellWallLipidLayer(){
+
+  if( lipidic_mesh ){
+    delete [] lipidic_mesh;
+    fprintf(stdout, "\n\t> Deallocation of lipidic_mesh array");
+    fflush(stdout);    
+  }
 
   if( ll_angles ){
     delete [] ll_angles;
@@ -130,7 +146,8 @@ void CellWallLipidLayer::simulation_infos(){
   fprintf(stdout, "\n\t\t> Lipid layer length: %f nm\n", _layer_length);
   fprintf(stdout, "\n\t\t> Total number of LP: %d", _total_nlp);
   fprintf(stdout, "\n\t\t> Total number of LP-springs: %d", _nlipidic_bonds);
-  fprintf(stdout, "\n\t\t> Total number of 'Pi' angles: %d\n", _nlipid_lipid_angles);
+  fprintf(stdout, "\n\t\t> Total number of 'Pi' angles: %d", _nlipid_lipid_angles);
+  fprintf(stdout, "\n\t\t> Total number of mesh element: %d\n", _nlipidic_mesh);
   fflush(stdout);
 
 }
