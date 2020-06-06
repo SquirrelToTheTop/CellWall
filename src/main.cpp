@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(50,100);
+	CellWallMonolayer *cwl = new CellWallMonolayer(4,4);
 	CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
 	                                                    cwl->get_number_of_strands());
 
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]){
 	display_glyco_bonds(cwl);
 	display_pepti_bonds(cwl);
 	display_glyco_glyco_angles(cwl);
+	display_lipid_lipid_angles(llayer);
 #endif
 
 	double energy_glyco, energy_pepti, energy_glyco_glyco, energy_lipid;

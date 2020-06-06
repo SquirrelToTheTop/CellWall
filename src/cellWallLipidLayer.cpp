@@ -246,7 +246,6 @@ void CellWallLipidLayer::generate_bonds(){
   mi = 0;
   mj = DIM;
   bi = 0;
-  ai = 0;
 
   // offset to same masse on next/previous strand
   offset = _nlpstrand*DIM;
@@ -264,10 +263,6 @@ void CellWallLipidLayer::generate_bonds(){
       lipidic_bonds[bi] = mi;
       lipidic_bonds[bi+1] = mi+offset;
 
-      // ll_angles[ai] = int(mi/3);
-      // ll_angles[ai+1] = int(mj/3);
-      // ai += 2;
-
       mi += DIM;
       mj += DIM;
       bi += 2;
@@ -284,11 +279,6 @@ void CellWallLipidLayer::generate_bonds(){
     lipidic_bonds[bi+1] = mi+offset;
     bi += 2;
 
-
-    // gg_angles[ai] = int((mj-DIM)/3);
-    // gg_angles[ai+1] = int((mi - (_nlpstrand-1)*DIM)/3);
-    // ai += 2;
-
     // next strands
     mi += DIM;
     mj += DIM;
@@ -302,10 +292,6 @@ void CellWallLipidLayer::generate_bonds(){
     lipidic_bonds[bi+1] = mj;
     bi += 2;
 
-    // ll_angles[ai] = int(mi/3);
-    // ll_angles[ai+1] = int(mj/3);
-    // ai += 2;
-
     mi += DIM;
     mj += DIM;
 
@@ -316,14 +302,113 @@ void CellWallLipidLayer::generate_bonds(){
   lipidic_bonds[bi+1] = mi - (_nlpstrand-1)*DIM;
   bi += 2;
 
+  // Pi angle between tree aligned lipid masses
+  ai = 0;
+  mi = DIM;
+
+  // first strand 
+  // first angle on strand 
+  ll_angles[ai] = offset - DIM;
+  ll_angles[ai+1] = mi - DIM; // angle here
+  ll_angles[ai+2] = mi;
+  ai += 3;
+
+  for(i=1; i<_nlpstrand-1; ++i){
+    ll_angles[ai] = mi - DIM;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi + DIM;
+    ai += 3;
+    mi += DIM;
+  }
+
+  // last angle on strand 
+  ll_angles[ai] = mi - DIM;
+  ll_angles[ai+1] = mi; // angle here
+  ll_angles[ai+2] = mi - offset + DIM;
+  ai += 3;
+  mi += DIM;
+
+  // middle strand + angle with masses on left and right strand
+  for(i=1; i<_nstrands-1; ++i){
+
+    // first angle on strand 
+    ll_angles[ai] = (i+1) * _nlpstrand * DIM - DIM;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi + DIM;
+    ai += 3;
+
+    ll_angles[ai] = mi - offset;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi + offset;
+    ai += 3;
+
+    mi += DIM;
+
+    for(j=1; j<_nlpstrand-1; ++j){
+      
+      // angle on same strand
+      ll_angles[ai] = mi - DIM;
+      ll_angles[ai+1] = mi; // angle here
+      ll_angles[ai+2] = mi + DIM;
+      ai += 3;
+
+      // angle with mass of left and on right stands
+      ll_angles[ai] = mi - offset;
+      ll_angles[ai+1] = mi; // angle here
+      ll_angles[ai+2] = mi + offset;
+      ai += 3;
+
+
+      mi += DIM;
+    }
+
+    // skip last one for the moment
+    // last angle on strand 
+    ll_angles[ai] = mi - DIM;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi - offset + DIM;
+    ai += 3;
+
+    // angle with mass of left and on right stands
+    ll_angles[ai] = mi - offset;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi + offset;
+    ai += 3;
+    mi += DIM;
+  
+  }
+
+  // last strand
+  // first angle on last strand 
+  ll_angles[ai] = _nstrands * _nlpstrand * DIM - DIM;
+  ll_angles[ai+1] = mi; // angle here
+  ll_angles[ai+2] = mi + DIM;
+  ai += 3;
+  mi += DIM;
+
+  for(i=1; i<_nlpstrand-1; ++i){
+    ll_angles[ai] = mi - DIM;
+    ll_angles[ai+1] = mi; // angle here
+    ll_angles[ai+2] = mi + DIM;
+    ai += 3;
+    mi += DIM;
+  }
+
+  // last angle on last strand 
+  ll_angles[ai] = mi - DIM;
+  ll_angles[ai+1] = mi; // angle here
+  ll_angles[ai+2] = mi - offset + DIM;
+  ai += 3;
+  mi += DIM;
+
   if( int(bi/2) != _nlipidic_bonds ){
     fprintf(stderr, "\n\t> Error: number of lipidic springs created != theorical number of bonds !");
     fprintf(stderr, "\t> %d vs %d\n", int(bi)/2, _nlipidic_bonds );
     fflush(stdout);
   }else{
-    if( int(ai)/2 != _nlipid_lipid_angles ){
-      fprintf(stderr, "\n\n\t> Error: number of l-l angles created != theorical number of g-g angles !\n");
-      fprintf(stderr, "\t> %d vs %d\n", int(ai)/2, _nlipid_lipid_angles );
+    if( int(ai)/3 != _nlipid_lipid_angles ){
+      fprintf(stderr, "\n\n\t> Error: number of l-l angles created != theorical number of l-l angles !\n");
+      fprintf(stderr, "\t> %d vs %d\n", int(ai)/3, _nlipid_lipid_angles );
       fflush(stdout);
     }else{
       fprintf(stdout, " SUCCESS \n");
@@ -332,6 +417,32 @@ void CellWallLipidLayer::generate_bonds(){
   }
 
 }
+
+/*
+ * Generate array of mesh element for lipidic layer
+ * 
+ *        z
+ *        |  
+ *           4---9---*---*---*---*
+ *           | \ | \ | \ | \ | \ | 
+ *           3---8---*---*---*---* 
+ *           | \ | \ | \ | \ | \ |
+ *           2---7---*---*---*---*    -> y
+ *           | \ | \ | \ | \ | \ |
+ *           1---6---*---*---*---*
+ *           | \ | \ | \ | \ | \ | 
+ *           0---5---*---*---*---* 
+ *       /
+ *      x
+ * 
+ * the lipidic_bond array is constructed in a way that lipidic_mesh[i], lipidic_mesh[i+1]
+ * and lipidic_mesh[i+2] are the couple of masses that form a triangle of the mesh. 
+ *  
+ */   
+void CellWallLipidLayer::generate_mesh(){
+
+}
+
 
 /* getter */
 
@@ -349,6 +460,10 @@ int CellWallLipidLayer::get_total_lipids(){
 
 int CellWallLipidLayer::get_total_lbonds(){
   return _nlipidic_bonds;
+}
+
+int CellWallLipidLayer::get_total_lipid_lipid_angles(){
+  return _nlipid_lipid_angles;
 }
 
 double CellWallLipidLayer::get_spring_d0(){

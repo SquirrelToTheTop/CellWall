@@ -62,3 +62,27 @@ void display_glyco_glyco_angles(CellWallMonolayer *cwl){
   fprintf(stdout, "\n");
 
 }
+
+/*
+ * Display lipid - lipid angles in a debug and sexy way
+ * 
+ * Parameters:
+ *               pointor to lipid layer
+ */
+void display_lipid_lipid_angles(CellWallLipidLayer *ll){
+  int i;
+  int mi, mj, mk;
+
+  fprintf(stdout, "\n\t> Lipid-Lipid angles : %d ", ll->get_total_lipid_lipid_angles());
+  
+  for(i=0; i<ll->get_total_lipid_lipid_angles()*3; i+=3){
+    mj = int(ll->ll_angles[i])/3;
+    mi = int(ll->ll_angles[i+1])/3;
+    mk = int(ll->ll_angles[i+2])/3;
+    
+    fprintf(stdout, "\n\t\t> angle #%5d between lipid masses : %d -- %d -- %d\n", int(i/3),mj, mi, mk);
+
+  }
+  fprintf(stdout, "\n");
+
+}

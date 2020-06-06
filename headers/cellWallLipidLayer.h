@@ -23,7 +23,8 @@ class CellWallLipidLayer{
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_lipidic_bonds_array(); // get pointor to lipidic array
     int get_total_lipids(); // get total number of lipids
-    int get_total_lbonds(); // get toal number of bonds
+    int get_total_lbonds(); // get total number of bonds
+    int get_total_lipid_lipid_angles(); // get total number of lipid lipid angles
     double get_spring_d0(); // return computed d0_l for lipidic spring
 
     // display import information about the cellwall model
