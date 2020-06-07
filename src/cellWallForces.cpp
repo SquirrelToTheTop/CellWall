@@ -194,3 +194,53 @@ double compute_energy_lbond(CellWallLipidLayer *ll){
   return l_energy;
 
 }
+
+/*
+ * Compute the total energy of lipid - lipid angles according to
+ * the equation  : e = 0.5 * k_ll * (Theta - Theta_0)^2
+ * (euclidian norme used). Theorical/optimal angle is PI
+ * 
+ * Parameters:
+ *             lipid layer object, use coordinate array and lipid
+ *             ll_angles
+ * 
+ */
+double compute_energy_ll_angles(CellWallLipidLayer *ll){
+  
+  int i, mi, mj, mk;
+  double x_ij, y_ij , z_ij, norm_ij;
+  double x_jk, y_jk , z_jk, norm_jk;
+  double ll_energy = 0.0f, pscal, theta;
+
+  for(i=0; i<ll->get_total_lipid_lipid_angles()*3; i+=3){
+
+    // the two involved bonds
+    mi = ll->ll_angles[i];
+    mj = ll->ll_angles[i+1]; // middle mass #emoticon_lunette
+    mk = ll->ll_angles[i+2];
+
+    // mi, mj, mk are the index in the coordinate array of the "x" coordinate of the mass
+    x_ij = ll->coordinate_xyz[mi] - ll->coordinate_xyz[mj];
+    y_ij = ll->coordinate_xyz[mi+1] - ll->coordinate_xyz[mj+1];
+    z_ij = ll->coordinate_xyz[mi+2] - ll->coordinate_xyz[mj+2];
+
+    x_jk = ll->coordinate_xyz[mk] - ll->coordinate_xyz[mj];
+    y_jk = ll->coordinate_xyz[mk+1] - ll->coordinate_xyz[mj+1];
+    z_jk = ll->coordinate_xyz[mk+2] - ll->coordinate_xyz[mj+2];
+
+    norm_ij = sqrt(x_ij*x_ij + y_ij*y_ij + z_ij*z_ij);
+    norm_jk = sqrt(x_jk*x_jk + y_jk*y_jk + z_jk*z_jk);
+
+    // cos_theta = (mimj . mjmk)/||mimj||*||mjmk||
+    pscal = x_ij*x_jk + y_ij*y_jk + z_ij*z_jk;
+    theta = acos( pscal/(norm_ij*norm_jk) );
+
+    ll_energy += (theta-alpha0_gg)*(theta-alpha0_gg);
+    
+  }
+
+  ll_energy = ll_energy * 0.5f * stiffness_ll;
+
+  return ll_energy;
+
+}

@@ -42,7 +42,9 @@ int main(int argc, char *argv[]){
 	display_lipid_lipid_angles(llayer);
 #endif
 
-	double energy_glyco, energy_pepti, energy_glyco_glyco, energy_lipid;
+	double energy_glyco, energy_pepti, energy_lipid;
+	double energy_glyco_glyco, energy_lipid_lipid;
+
 	clock_t start, end;
 	double cpu_time_used;
 
@@ -87,6 +89,13 @@ int main(int argc, char *argv[]){
 		fprintf(stdout,"\n\t> Total energy of lipidic springs : %f nJ - elapsed : %f \n", energy_lipid, cpu_time_used);
 		fflush(stdout);
 
+		start = clock();
+		energy_lipid_lipid = compute_energy_ll_angles(llayer);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		fprintf(stdout,"\n\t> Total energy of lipid-lipid angles : %f nJ - elapsed : %f \n", energy_lipid_lipid, cpu_time_used);
+		fflush(stdout);
 
 		// mini integration 
 		// double dt=0.00001f;
