@@ -25,6 +25,7 @@ class CellWallLipidLayer{
     int get_total_lipids(); // get total number of lipids
     int get_total_lbonds(); // get total number of bonds
     int get_total_lipid_lipid_angles(); // get total number of lipid lipid angles
+    int get_total_number_of_mesh(); // get total number of mesh element
     double get_spring_d0(); // return computed d0_l for lipidic spring
 
     // display import information about the cellwall model

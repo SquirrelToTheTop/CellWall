@@ -239,7 +239,7 @@ void CellWallLipidLayer::generate_bonds(){
   int i, j, mi, mj, ai, bi;
   int offset;
 
-  fprintf(stdout, "\n\t> Generate lipidic springs ... ");
+  fprintf(stdout, "\n\t> Generate lipid springs & angles ... ");
   fflush(stdout);
 
   // lipidic bonds
@@ -358,7 +358,6 @@ void CellWallLipidLayer::generate_bonds(){
       ll_angles[ai+2] = mi + offset;
       ai += 3;
 
-
       mi += DIM;
     }
 
@@ -411,7 +410,7 @@ void CellWallLipidLayer::generate_bonds(){
       fprintf(stderr, "\t> %d vs %d\n", int(ai)/3, _nlipid_lipid_angles );
       fflush(stdout);
     }else{
-      fprintf(stdout, " SUCCESS \n");
+      fprintf(stdout, " SUCCESS ");
       fflush(stdout);
     }
   }
@@ -419,7 +418,7 @@ void CellWallLipidLayer::generate_bonds(){
 }
 
 /*
- * Generate array of mesh element for lipidic layer
+ * Generate array of mesh element for the lipid layer
  * 
  *        z
  *        |  
@@ -440,6 +439,85 @@ void CellWallLipidLayer::generate_bonds(){
  *  
  */   
 void CellWallLipidLayer::generate_mesh(){
+
+  int i, j, mi, bi;
+  int offset;
+
+  fprintf(stdout, "\n\t> Generate mesh of lipid layer ... ");
+  fflush(stdout);
+
+  // lipidic bonds
+  mi = 0;
+  bi = 0;
+
+  // offset to same masse on next/previous strand
+  offset = _nlpstrand*DIM;
+
+  for(i=0; i<_nstrands-1; ++i){
+    
+    for(j=0; j<_nlpstrand-1; ++j){
+      
+      /* first triangle
+      * mi+DIM
+      *   |  \
+      *   |   \
+      *  mi -- mi+offset
+      */
+      lipidic_mesh[bi] = mi;
+      lipidic_mesh[bi+1] = mi + offset;
+      lipidic_mesh[bi+2] = mi + DIM;
+      bi += 3;
+
+      /* second triangle 
+      * mi+DIM -- mi + DIM + offset
+      *     \     |
+      *      \    |
+      * mi     -- mi + offset
+      */
+      lipidic_mesh[bi] = mi + DIM;
+      lipidic_mesh[bi+1] = mi + DIM + offset;
+      lipidic_mesh[bi+2] = mi + offset;
+
+      mi += DIM;
+      bi += 3;
+
+    }
+
+    /* at the end of the strand connect last mass with first
+    * first triangle
+    * mi-offset+DIM
+    *   |  \
+    *   |   \
+    *  mi -- mi+offset
+    */
+    lipidic_mesh[bi] = mi;
+    lipidic_mesh[bi+1] = mi + offset;
+    lipidic_mesh[bi+2] = mi - offset + DIM;
+    bi += 3;
+
+    /* second triangle 
+    * mi-offset+DIM -- mi + DIM
+    *     \                |
+    *      \               |
+    * mi            -- mi + offset
+    */
+    lipidic_mesh[bi] = mi - offset + DIM;
+    lipidic_mesh[bi+1] = mi + DIM ;
+    lipidic_mesh[bi+2] = mi + offset;
+
+    mi += DIM;
+    bi += 3;
+
+  }
+
+  if( int(bi)/3 != _nlipidic_mesh ){
+    fprintf(stderr, "\n\n\t> Error: number of mesh element created != theorical number of mesh element !\n");
+    fprintf(stderr, "\t> %d vs %d\n", int(bi)/3, _nlipidic_mesh );
+    fflush(stdout);
+  }else{
+    fprintf(stdout, " SUCCESS \n");
+    fflush(stdout);
+  }
 
 }
 
@@ -464,6 +542,10 @@ int CellWallLipidLayer::get_total_lbonds(){
 
 int CellWallLipidLayer::get_total_lipid_lipid_angles(){
   return _nlipid_lipid_angles;
+}
+
+int CellWallLipidLayer::get_total_number_of_mesh(){
+  return _nlipidic_mesh;
 }
 
 double CellWallLipidLayer::get_spring_d0(){

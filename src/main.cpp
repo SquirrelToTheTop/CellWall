@@ -34,12 +34,14 @@ int main(int argc, char *argv[]){
 	llayer->simulation_infos();
 	llayer->generate_geometry();
 	llayer->generate_bonds();
+	llayer->generate_mesh();
 
 #ifdef DEBUG
 	display_glyco_bonds(cwl);
 	display_pepti_bonds(cwl);
 	display_glyco_glyco_angles(cwl);
 	display_lipid_lipid_angles(llayer);
+	display_lipid_mesh(llayer);
 #endif
 
 	double energy_glyco, energy_pepti, energy_lipid;
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]){
 		end = clock();
 		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-		fprintf(stdout,"\n\t> Total energy of lipidic springs : %f nJ - elapsed : %f \n", energy_lipid, cpu_time_used);
+		fprintf(stdout,"\n\t> Total energy of lipidic springs : %f nJ - elapsed : %f", energy_lipid, cpu_time_used);
 		fflush(stdout);
 
 		start = clock();

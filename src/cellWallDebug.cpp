@@ -80,7 +80,31 @@ void display_lipid_lipid_angles(CellWallLipidLayer *ll){
     mi = int(ll->ll_angles[i+1])/3;
     mk = int(ll->ll_angles[i+2])/3;
     
-    fprintf(stdout, "\n\t\t> angle #%5d between lipid masses : %d -- %d -- %d\n", int(i/3),mj, mi, mk);
+    fprintf(stdout, "\n\t\t> angle #%5d between lipid masses : %d -- %d -- %d\n", int(i/3), mj, mi, mk);
+
+  }
+  fprintf(stdout, "\n");
+
+}
+
+/*
+ * Display lipid mesh debug and sexy way
+ * 
+ * Parameters:
+ *               pointor to lipid layer
+ */
+void display_lipid_mesh(CellWallLipidLayer *ll){
+  int i;
+  int mi, mj, mk;
+
+  fprintf(stdout, "\n\t> Lipid mesh : %d ", ll->get_total_number_of_mesh());
+  
+  for(i=0; i<ll->get_total_number_of_mesh()*3; i+=3){
+    mj = int(ll->lipidic_mesh[i])/3;
+    mi = int(ll->lipidic_mesh[i+1])/3;
+    mk = int(ll->lipidic_mesh[i+2])/3;
+    
+    fprintf(stdout, "\n\t\t> mesh #%5d between lipid masses : %d -- %d -- %d\n", int(i/3), mj, mi, mk);
 
   }
   fprintf(stdout, "\n");

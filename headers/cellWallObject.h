@@ -73,6 +73,9 @@ class CellWallMonolayer{
 
     double _cellwall_radius = 0.0f;
     double _cellwall_length = 0.0f;
+
+    int _cellwall_cap_nstrands = 0; // number of strand in one cap
+    double _cellwall_cap_radius = 0.0f; // radius of caps
 };
 
 #endif

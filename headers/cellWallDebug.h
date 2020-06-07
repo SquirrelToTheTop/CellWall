@@ -17,4 +17,7 @@ void display_glyco_glyco_angles(CellWallMonolayer *cwl);
 // display lipid - lipid angles and masses number for debug
 void display_lipid_lipid_angles(CellWallLipidLayer *ll);
 
+// display lipid - lipid mesh and masses number for debug
+void display_lipid_mesh(CellWallLipidLayer *ll);
+
 #endif

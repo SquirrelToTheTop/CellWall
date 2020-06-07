@@ -32,7 +32,11 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   _total_npg = nstrands * npgstrand;
 
   _cellwall_radius = d0_g * npgstrand / (2.0f*PI);
-  _cellwall_length = (nstrands-1) * d0_p;
+  
+  _cellwall_cap_radius = _cellwall_radius;
+  _cellwall_cap_nstrands = int(_cellwall_cap_radius/d0_p);
+  
+  _cellwall_length = (nstrands-1) * d0_p + 2.0f * _cellwall_cap_radius;
 
   // total number of glycosidic bond 
   _nglyco_bonds = npgstrand * nstrands;
