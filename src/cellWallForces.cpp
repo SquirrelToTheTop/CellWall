@@ -244,3 +244,55 @@ double compute_energy_ll_angles(CellWallLipidLayer *ll){
   return ll_energy;
 
 }
+
+/*
+ * Compute the total energy due to the turgor pressure according to
+ * the equation  : e = P . V
+ * 
+ * Volume computed based on center of a strand (coordinate computed
+ * with least square method which equals to a mean) and tree 
+ * tetrahedrons for each mesh element (2 triangles)
+ * 
+ * Parameters:
+ *             lipid layer object, use coordinate array and lipid
+ *             ll_angles
+ * 
+ */
+double compute_energy_pressure(CellWallLipidLayer *ll){
+  
+  int i, j, ns, nlps, ci, mi;
+  double pressure_energy = 0.0f;
+
+  ns = ll->get_number_of_strands();
+  nlps = ll->get_number_of_lp_strand();
+
+  double centers[ns*DIM];
+
+  // compute centers of lipid strands least square method
+  ci = 0;
+  mi = 0;
+  for(i=0; i<ns; ++i){
+
+    centers[ci]= 0.0f;
+    centers[ci+1]= 0.0f;
+    centers[ci+2]= 0.0f;
+    
+    for(j=0; j<nlps; ++j){
+      centers[ci] += ll->coordinate_xyz[mi];
+      centers[ci+1] += ll->coordinate_xyz[mi+1];
+      centers[ci+2] += ll->coordinate_xyz[mi+2];
+      mi += DIM;
+    }
+
+    centers[ci] /= nlps;
+    centers[ci+1] /= nlps;
+    centers[ci+2] /= nlps;
+
+    fprintf(stdout, "\n> Center #%d @ (%f,%f,%f)", i, centers[ci], centers[ci+1], centers[ci+2]);
+    fflush(stdout);
+    ci += DIM;
+  }
+
+  return pressure_energy;
+
+}

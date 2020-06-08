@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 #endif
 
 	double energy_glyco, energy_pepti, energy_lipid;
-	double energy_glyco_glyco, energy_lipid_lipid;
+	double energy_glyco_glyco, energy_lipid_lipid, energy_pressure;
 
 	clock_t start, end;
 	double cpu_time_used;
@@ -97,6 +97,14 @@ int main(int argc, char *argv[]){
 		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
 		fprintf(stdout,"\n\t> Total energy of lipid-lipid angles : %f nJ - elapsed : %f \n", energy_lipid_lipid, cpu_time_used);
+		fflush(stdout);
+
+		start = clock();
+		energy_pressure = compute_energy_pressure(llayer);
+		end = clock();
+		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		fprintf(stdout,"\n\t> Total energy of pressure : %f nJ - elapsed : %f \n", energy_pressure, cpu_time_used);
 		fflush(stdout);
 
 		// mini integration 

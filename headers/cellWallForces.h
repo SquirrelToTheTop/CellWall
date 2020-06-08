@@ -20,4 +20,7 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl);
 /* Compute energy of bending for lipid - lipid */
 double compute_energy_ll_angles(CellWallLipidLayer *ll);
 
+/* Compute energy of pressure in/on the lipid layer */
+double compute_energy_pressure(CellWallLipidLayer *ll);
+
 #endif

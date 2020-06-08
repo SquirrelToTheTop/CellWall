@@ -146,6 +146,7 @@ void CellWallLipidLayer::simulation_infos(){
   fprintf(stdout, "\n\t\t> Lipid layer length: %f nm\n", _layer_length);
   fprintf(stdout, "\n\t\t> Total number of LP: %d", _total_nlp);
   fprintf(stdout, "\n\t\t> Total number of LP-springs: %d", _nlipidic_bonds);
+  fprintf(stdout, "\n\t\t> Rest length for LP-spring: %f", d0_l);
   fprintf(stdout, "\n\t\t> Total number of 'Pi' angles: %d", _nlipid_lipid_angles);
   fprintf(stdout, "\n\t\t> Total number of mesh element: %d\n", _nlipidic_mesh);
   fflush(stdout);
@@ -534,6 +535,14 @@ int * CellWallLipidLayer::get_lipidic_bonds_array(){
 
 int CellWallLipidLayer::get_total_lipids(){
   return _total_nlp;
+}
+
+int CellWallLipidLayer::get_number_of_strands(){
+  return _nstrands;
+}
+
+int CellWallLipidLayer::get_number_of_lp_strand(){
+  return _nlpstrand;
 }
 
 int CellWallLipidLayer::get_total_lbonds(){

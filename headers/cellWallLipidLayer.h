@@ -23,6 +23,8 @@ class CellWallLipidLayer{
     double * get_coordinate_array(); // get pointor to coordinate array
     int * get_lipidic_bonds_array(); // get pointor to lipidic array
     int get_total_lipids(); // get total number of lipids
+    int get_number_of_strands(); // get number of strands
+    int get_number_of_lp_strand(); // get number of lp/strand
     int get_total_lbonds(); // get total number of bonds
     int get_total_lipid_lipid_angles(); // get total number of lipid lipid angles
     int get_total_number_of_mesh(); // get total number of mesh element
