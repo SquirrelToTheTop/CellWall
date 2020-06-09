@@ -560,3 +560,11 @@ int CellWallLipidLayer::get_total_number_of_mesh(){
 double CellWallLipidLayer::get_spring_d0(){
   return d0_l;
 }
+
+double CellWallLipidLayer::get_radius(){
+  return _layer_radius;
+}
+
+double CellWallLipidLayer::get_length(){
+  return _layer_length;
+}

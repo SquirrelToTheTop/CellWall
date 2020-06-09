@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(4,4);
+	CellWallMonolayer *cwl = new CellWallMonolayer(50,50);
 	CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
 	                                                    cwl->get_number_of_strands());
 
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
 		end = clock();
 		cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-		fprintf(stdout,"\n\t> Total energy of lipid-lipid angles : %f nJ - elapsed : %f \n", energy_lipid_lipid, cpu_time_used);
+		fprintf(stdout,"\n\t> Total energy of lipid-lipid angles : %f nJ - elapsed : %f", energy_lipid_lipid, cpu_time_used);
 		fflush(stdout);
 
 		start = clock();

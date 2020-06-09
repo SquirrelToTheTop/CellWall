@@ -260,13 +260,21 @@ double compute_energy_ll_angles(CellWallLipidLayer *ll){
  */
 double compute_energy_pressure(CellWallLipidLayer *ll){
   
-  int i, j, ns, nlps, ci, mi;
+  int i, j, ci, mi;
+  int ns, nlps, nmesh, meshi, nmesh_strand;
+  int a, b, c, d;
   double pressure_energy = 0.0f;
+  double tmp_oa[DIM], tmp_oc[DIM], tmp_ob[DIM], tmp_od[DIM];
 
   ns = ll->get_number_of_strands();
   nlps = ll->get_number_of_lp_strand();
+  nmesh = ll->get_total_number_of_mesh(); // triangle
+  nmesh_strand = nlps;
 
   double centers[ns*DIM];
+  double total_v, v1, v2, v3;
+
+  total_v = 0.0f;
 
   // compute centers of lipid strands least square method
   ci = 0;
@@ -288,11 +296,87 @@ double compute_energy_pressure(CellWallLipidLayer *ll){
     centers[ci+1] /= nlps;
     centers[ci+2] /= nlps;
 
-    fprintf(stdout, "\n> Center #%d @ (%f,%f,%f)", i, centers[ci], centers[ci+1], centers[ci+2]);
-    fflush(stdout);
+    // fprintf(stdout, "\n> Center #%d @ (%f,%f,%f)", i, centers[ci], centers[ci+1], centers[ci+2]);
+    // fflush(stdout);
     ci += DIM;
   }
 
-  return pressure_energy;
+  ci = 0;
+  meshi = 0;
+  for(i=0; i<ns-1; ++i){
+
+    // same center for all those mesh element (square mesh here)
+    for(j=0; j<nmesh_strand; ++j){
+
+      // first tetrahedron
+      a = ll->lipidic_mesh[meshi];
+      b = ll->lipidic_mesh[meshi+1];
+      c = ll->lipidic_mesh[meshi+2];
+      
+      tmp_oc[0] = ll->coordinate_xyz[c] - centers[ci];
+      tmp_oc[1] = ll->coordinate_xyz[c+1] - centers[ci+1];
+      tmp_oc[2] = ll->coordinate_xyz[c+2] - centers[ci+2];
+
+      tmp_oa[0] = ll->coordinate_xyz[a] - centers[ci];
+      tmp_oa[1] = ll->coordinate_xyz[a+1] - centers[ci+1];
+      tmp_oa[2] = ll->coordinate_xyz[a+2] - centers[ci+2];
+
+      v1 = (tmp_oc[1]*tmp_oa[2] - tmp_oc[2]*tmp_oa[1]) * (ll->coordinate_xyz[b] - ll->coordinate_xyz[a]); 
+      v1 += (tmp_oc[2]*tmp_oa[0] - tmp_oc[0]*tmp_oa[2]) * (ll->coordinate_xyz[b+1] - ll->coordinate_xyz[a+1]);
+      v1 += (tmp_oc[0]*tmp_oa[1] - tmp_oc[1]*tmp_oa[0]) * (ll->coordinate_xyz[b+2] - ll->coordinate_xyz[a+2]);
+      v1 /= 6.0f;
+
+      meshi += 3;
+      // fprintf(stdout, "\n> Volume tetrahedron 1 (%d,%d,%d,O1) = %f ", int(a/3), int(b/3), int(c/3), v1);
+
+      // second tetrahedron
+      tmp_ob[0] = ll->coordinate_xyz[b] - centers[ci];
+      tmp_ob[1] = ll->coordinate_xyz[b+1] - centers[ci+1];
+      tmp_ob[2] = ll->coordinate_xyz[b+2] - centers[ci+2];
+
+      v2 = (tmp_oc[1]*tmp_ob[2] - tmp_oc[2]*tmp_ob[1]) * (centers[ci+DIM] - ll->coordinate_xyz[b]); 
+      v2 += (tmp_oc[2]*tmp_ob[0] - tmp_oc[0]*tmp_ob[2]) * (centers[ci+DIM+1] - ll->coordinate_xyz[b+1]);
+      v2 += (tmp_oc[0]*tmp_ob[1] - tmp_oc[1]*tmp_ob[0]) * (centers[ci+DIM+2] - ll->coordinate_xyz[b+2]);
+      v2 /= 6.0f;
+
+      // two triangle used
+      // fprintf(stdout, "\n> Volume tetrahedron 2 (%d,%d,O1,O2) = %f", int(c/3), int(b/3), v2);
+
+      // third tetrahedon
+      d = ll->lipidic_mesh[meshi+1];
+      
+      // work with center of next strand
+      ci += DIM;
+      tmp_oc[0] = ll->coordinate_xyz[c] - centers[ci];
+      tmp_oc[1] = ll->coordinate_xyz[c+1] - centers[ci+1];
+      tmp_oc[2] = ll->coordinate_xyz[c+2] - centers[ci+2];
+
+      tmp_od[0] = ll->coordinate_xyz[d] - centers[ci];
+      tmp_od[1] = ll->coordinate_xyz[d+1] - centers[ci+1];
+      tmp_od[2] = ll->coordinate_xyz[d+2] - centers[ci+2];
+
+      v3 = (tmp_od[1]*tmp_oc[2] - tmp_od[2]*tmp_oc[1]) * (ll->coordinate_xyz[b] - ll->coordinate_xyz[d]); 
+      v3 += (tmp_od[2]*tmp_oc[0] - tmp_od[0]*tmp_oc[2]) * (ll->coordinate_xyz[b+1] - ll->coordinate_xyz[d+1]);
+      v3 += (tmp_od[0]*tmp_oc[1] - tmp_od[1]*tmp_oc[0]) * (ll->coordinate_xyz[b+2] - ll->coordinate_xyz[d+2]);
+      v3 /= 6.0f;
+
+      // pointor to center of current strand
+      ci -= DIM;
+      meshi += 3;
+      // fprintf(stdout, "\n> Volume tetrahedron 3 (%d,%d,%d,O2) = %f \n", int(a/3), int(b/3), int(d/3), v3);
+
+      total_v += v1 + v2 + v3;
+
+    }
+
+    ci += DIM;
+
+  }
+
+  fprintf(stdout, "\n\t\t> Total volume of lipid layer (triangle mesh) :  %f nm^3", total_v);
+  fprintf(stdout, "\n\t\t> Total volume of lipid layer (classic) :  %f nm^3", 
+          PI*ll->get_radius()*ll->get_radius()*ll->get_length());
+
+  return total_v * inner_pressure;
 
 }

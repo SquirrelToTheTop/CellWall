@@ -29,6 +29,8 @@ class CellWallLipidLayer{
     int get_total_lipid_lipid_angles(); // get total number of lipid lipid angles
     int get_total_number_of_mesh(); // get total number of mesh element
     double get_spring_d0(); // return computed d0_l for lipidic spring
+    double get_radius(); // get lipid layer initial radius
+    double get_length(); // get lipid layer length
 
     // display import information about the cellwall model
     void simulation_infos();
