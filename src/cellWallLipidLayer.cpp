@@ -28,7 +28,7 @@ CellWallLipidLayer::CellWallLipidLayer(double cw_radius, double cw_length, int c
 
   // compute layer radius according to cell wall radius
   // 90% of the cell wall radius could/should be adapted
-  _layer_radius = 0.80f * cw_radius;
+  _layer_radius = cw_radius - cut_off*1.5f;
   _layer_length = cw_length;
 
    // could be 2 but 1.5 makes less lipids masses
@@ -207,7 +207,7 @@ void CellWallLipidLayer::generate_geometry(){
       offset_0 += DIM;
     }
     
-    // increase y coordinate by a peptidic distance
+    // increase y coordinate by a lipidic distance
     ystrand += d0_l;
 
   }

@@ -42,9 +42,9 @@ int main(int argc, char *argv[]){
 	display_lipid_mesh(llayer);
 #endif
 
-	analyze_cpu_time_energy(cwl, llayer, 1000);
+	// analyze_cpu_time_energy(cwl, llayer, 300);
 
-	optimize_simulated_annealing(cwl, llayer, 10);
+	optimize_simulated_annealing(cwl, llayer, 10000);
 
 	delete llayer;
 	delete cwl;

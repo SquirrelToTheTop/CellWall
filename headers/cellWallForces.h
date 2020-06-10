@@ -23,4 +23,7 @@ double compute_energy_ll_angles(CellWallLipidLayer *ll);
 /* Compute energy of pressure in/on the lipid layer */
 double compute_energy_pressure(CellWallLipidLayer *ll);
 
+/* Compute energy of Lennard-Jones interaction between cellwall and lipid layer */
+double compute_energy_lennardJones(CellWallMonolayer *cwl, CellWallLipidLayer *ll);
+
 #endif

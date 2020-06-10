@@ -11,9 +11,9 @@ const double stiffness_l = 1.0f; // pN/nm lipidic
 
 const double stiffness_gg = 0.1f; // pN/nm angle glyco-glyco
 const double stiffness_pg = 0.01f; // pN/nm angle pepti-glyco
-const double stiffness_ll = 0.05f; // pN/nm angle lipi-lipi
+const double stiffness_ll = 0.5f; // pN/nm angle lipi-lipi
 
-const double inner_pressure = 0.5f; // pN/nm^2
+const double inner_pressure = 5.0f; // pN/nm^2
 
 const double d0_g = 2.0f; // nm, distance at rest for glycosidic spring
 const double d0_p = 1.0f; // nm, distance at rest for peptidic spring
@@ -25,9 +25,12 @@ const double epsilon_g = 0.1f; // percentage of difference between rest and curr
                                // state of spring when the structure is goemetrically 
                                // build
 
-const double epsilon_lj = 0.01f; // pJ, epsilon for Lennard-Jones potential
-const double cut_off = 4.0f; // nm cut off for LJ potential
+const double epsilon_lj = 0.001f; // pJ, epsilon for Lennard-Jones potential
+const double cut_off = 2.5f; // nm cut off for LJ potential
 
-const int output_iter = 5; // output data each # iter
+const int output_iter = 200; // output data each # iter
+
+const double fictive_temperature = 273.5f; // Kelvin for annealing
+const double fictive_kb = 3.1415f; // fictive boltzman constant for annealing
 
 #endif

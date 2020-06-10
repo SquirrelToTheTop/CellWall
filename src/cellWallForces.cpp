@@ -378,3 +378,45 @@ double compute_energy_pressure(CellWallLipidLayer *ll){
   return total_v * inner_pressure;
 
 }
+
+/*
+ * Compute energy of interaction between the cellwall and the lipid layer
+ * 
+ * Terrific in time consuming
+ */
+double compute_energy_lennardJones(CellWallMonolayer *cwl, CellWallLipidLayer *ll){
+
+  int mi, mj, pg_i, lp_i;
+  double xij, yij, zij, dij, tmp;
+  double energy_lj, energy_tmp;
+
+  pg_i = 0; 
+  energy_lj = 0.0f;
+  for(mi=0; mi<cwl->get_total_npg(); ++mi){
+
+    lp_i = 0;
+    energy_tmp = 0.0f;
+    for(mj=0; mj<ll->get_total_lipids(); ++mj){
+      
+      xij = cwl->coordinate_xyz[pg_i] - ll->coordinate_xyz[lp_i];
+      yij = cwl->coordinate_xyz[pg_i+1] - ll->coordinate_xyz[lp_i+1];
+      zij = cwl->coordinate_xyz[pg_i+2] - ll->coordinate_xyz[lp_i+2];
+      dij = sqrt(xij*xij + yij*yij + zij*zij);
+
+      tmp = (cut_off/dij) * (cut_off/dij) * (cut_off/dij); // ^3
+      tmp = tmp * tmp; // ^6
+
+      energy_tmp += (tmp * tmp) - 2.0f * tmp; // tmp^12 - 2.0 * tmp^6
+
+      lp_i += DIM;
+    }
+
+    energy_lj += energy_tmp * epsilon_lj;
+
+    pg_i += DIM;
+
+  }
+
+  return energy_lj;
+
+}
