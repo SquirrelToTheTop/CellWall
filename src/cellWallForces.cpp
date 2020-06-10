@@ -261,14 +261,12 @@ double compute_energy_ll_angles(CellWallLipidLayer *ll){
 double compute_energy_pressure(CellWallLipidLayer *ll){
   
   int i, j, ci, mi;
-  int ns, nlps, nmesh, meshi, nmesh_strand;
+  int ns, nlps, meshi, nmesh_strand;
   int a, b, c, d;
-  double pressure_energy = 0.0f;
   double tmp_oa[DIM], tmp_oc[DIM], tmp_ob[DIM], tmp_od[DIM];
 
   ns = ll->get_number_of_strands();
   nlps = ll->get_number_of_lp_strand();
-  nmesh = ll->get_total_number_of_mesh(); // triangle
   nmesh_strand = nlps;
 
   double centers[ns*DIM];
@@ -373,9 +371,9 @@ double compute_energy_pressure(CellWallLipidLayer *ll){
 
   }
 
-  fprintf(stdout, "\n\t\t> Total volume of lipid layer (triangle mesh) :  %f nm^3", total_v);
-  fprintf(stdout, "\n\t\t> Total volume of lipid layer (classic) :  %f nm^3", 
-          PI*ll->get_radius()*ll->get_radius()*ll->get_length());
+  // fprintf(stdout, "\n\t\t> Total volume of lipid layer (triangle mesh) :  %f nm^3", total_v);
+  // fprintf(stdout, "\n\t\t> Total volume of lipid layer (classic) :  %f nm^3", 
+  //         PI*ll->get_radius()*ll->get_radius()*ll->get_length());
 
   return total_v * inner_pressure;
 

@@ -28,4 +28,6 @@ const double epsilon_g = 0.1f; // percentage of difference between rest and curr
 const double epsilon_lj = 0.01f; // pJ, epsilon for Lennard-Jones potential
 const double cut_off = 4.0f; // nm cut off for LJ potential
 
+const int output_iter = 5; // output data each # iter
+
 #endif

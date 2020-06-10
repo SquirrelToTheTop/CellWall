@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME}_obj SHARED ${PROJECT_SOURCE_DIR}/src/cellWallUtils.c
                                        ${PROJECT_SOURCE_DIR}/src/cellWallForces.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallObject.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallLipidLayer.cpp
+                                       ${PROJECT_SOURCE_DIR}/src/cellWallOptimization.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallDebug.cpp
 )
 
