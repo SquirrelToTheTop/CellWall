@@ -101,10 +101,10 @@ void optimize_simulated_annealing(CellWallMonolayer *cwl, CellWallLipidLayer *ll
 	double energy_glyco_glyco, energy_lipid_lipid, energy_pressure;
   double total_energy, total_prev_energy;
 
-	int iter, i, j, niter_reset=0;
+	int iter, i, niter_reset=0;
 
 	double temperature = fictive_temperature;
-	double min_dx, max_dx, dx, proba_keep;
+	double max_dx, dx, proba_keep;
 
 	// save n-1
 	double *cwl_coordinate = new double[cwl->get_total_npg()*DIM];
@@ -159,8 +159,8 @@ void optimize_simulated_annealing(CellWallMonolayer *cwl, CellWallLipidLayer *ll
 		energy_pressure = compute_energy_pressure(ll);
 		energy_lj = compute_energy_lennardJones(cwl, ll);
 
-    total_energy = energy_glyco + energy_glyco_glyco + energy_lipid + energy_lipid_lipid;
-    total_energy += energy_pepti - energy_pressure + energy_lj;
+    // total_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
+    total_energy =   energy_lipid + energy_lipid_lipid - energy_pressure; //+ energy_lj;
 
 		fprintf(stdout, "\n\t> G %f P %f L %f GG %f LL %f V %f LJ %f\n", energy_glyco, energy_pepti, energy_lipid, 
 		energy_glyco_glyco, energy_lipid_lipid, energy_pressure, energy_lj);

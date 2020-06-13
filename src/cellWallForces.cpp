@@ -62,9 +62,9 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
 double compute_energy_gg_angles(CellWallMonolayer *cwl){
   
   int i, mi, mj, mk;
-  double x_ij, y_ij , z_ij, norm_ij;
-  double x_jk, y_jk , z_jk, norm_jk;
-  double gg_energy = 0.0f, pscal, theta;
+  double x_ij, y_ij , z_ij, norm_ij, norm_ij2;
+  double x_jk, y_jk , z_jk, norm_jk, norm_jk2;
+  double gg_energy = 0.0f, pscal, theta, tmp;
 
   for(i=0; i<cwl->get_total_gg_angles()*2; i+=2){
 
@@ -85,9 +85,26 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
     norm_ij = sqrt(x_ij*x_ij + y_ij*y_ij + z_ij*z_ij);
     norm_jk = sqrt(x_jk*x_jk + y_jk*y_jk + z_jk*z_jk);
 
+    norm_ij2 = norm_ij * norm_ij;
+    norm_jk2 = norm_jk * norm_jk;
+
     // cos_theta = (mimj . mjmk)/||mimj||*||mjmk||
     pscal = x_ij*x_jk + y_ij*y_jk + z_ij*z_jk;
     theta = acos( pscal/(norm_ij*norm_jk) );
+
+    tmp = norm_ij*norm_jk;
+
+    cwl->forces_xyz[mi]   += stiffness_gg * (x_jk/tmp + x_ij/norm_ij2);
+    cwl->forces_xyz[mi+1] += stiffness_gg * (y_jk/tmp + y_ij/norm_ij2);
+    cwl->forces_xyz[mi+2] += stiffness_gg * (z_jk/tmp + z_ij/norm_ij2);
+
+    cwl->forces_xyz[mj]   += stiffness_gg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
+    cwl->forces_xyz[mj+1] += stiffness_gg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
+    cwl->forces_xyz[mj+2] += stiffness_gg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
+
+    cwl->forces_xyz[mk]   += stiffness_gg * (x_ij/tmp + x_jk/norm_ij2);
+    cwl->forces_xyz[mk+1] += stiffness_gg * (y_ij/tmp + y_jk/norm_ij2);
+    cwl->forces_xyz[mk+2] += stiffness_gg * (z_ij/tmp + z_jk/norm_ij2);
 
     gg_energy += (theta-alpha0_gg)*(theta-alpha0_gg);
     
@@ -208,8 +225,9 @@ double compute_energy_lbond(CellWallLipidLayer *ll){
 double compute_energy_ll_angles(CellWallLipidLayer *ll){
   
   int i, mi, mj, mk;
-  double x_ij, y_ij , z_ij, norm_ij;
-  double x_jk, y_jk , z_jk, norm_jk;
+  double x_ij, y_ij , z_ij, norm_ij, norm_jk2;
+  double x_jk, y_jk , z_jk, norm_jk, norm_ij2;
+  double tmp;
   double ll_energy = 0.0f, pscal, theta;
 
   for(i=0; i<ll->get_total_lipid_lipid_angles()*3; i+=3){
@@ -231,9 +249,26 @@ double compute_energy_ll_angles(CellWallLipidLayer *ll){
     norm_ij = sqrt(x_ij*x_ij + y_ij*y_ij + z_ij*z_ij);
     norm_jk = sqrt(x_jk*x_jk + y_jk*y_jk + z_jk*z_jk);
 
+    norm_ij2 = norm_ij * norm_ij;
+    norm_jk2 = norm_jk * norm_jk;
+
     // cos_theta = (mimj . mjmk)/||mimj||*||mjmk||
     pscal = x_ij*x_jk + y_ij*y_jk + z_ij*z_jk;
     theta = acos( pscal/(norm_ij*norm_jk) );
+
+    tmp = norm_ij*norm_jk;
+
+    ll->forces_xyz[mi]   += stiffness_ll * (x_jk/tmp + x_ij/norm_ij2);
+    ll->forces_xyz[mi+1] += stiffness_ll * (y_jk/tmp + y_ij/norm_ij2);
+    ll->forces_xyz[mi+2] += stiffness_ll * (z_jk/tmp + z_ij/norm_ij2);
+
+    ll->forces_xyz[mj]   += stiffness_ll * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
+    ll->forces_xyz[mj+1] += stiffness_ll * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
+    ll->forces_xyz[mj+2] += stiffness_ll * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
+
+    ll->forces_xyz[mk]   += stiffness_ll * (x_ij/tmp + x_jk/norm_ij2);
+    ll->forces_xyz[mk+1] += stiffness_ll * (y_ij/tmp + y_jk/norm_ij2);
+    ll->forces_xyz[mk+2] += stiffness_ll * (z_ij/tmp + z_jk/norm_ij2);
 
     ll_energy += (theta-alpha0_gg)*(theta-alpha0_gg);
     

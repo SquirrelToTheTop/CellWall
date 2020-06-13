@@ -62,8 +62,8 @@ void CellWallIOSystem::close_file(std::string filename_ext){
   if( _output_file.is_open() ){
     _output_file.close();
 
-    fprintf(stdout, "\n\t> Closing output file : %s \n", filename_ext.c_str());
-    fflush(stdout);
+    // fprintf(stdout, "\n\t> Closing output file : %s \n", filename_ext.c_str());
+    // fflush(stdout);
   }
 
 }
@@ -164,8 +164,8 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
   output_filename = _filename + "_cw_" + std::to_string(output_number) + pdb_ext;
 
   open_file(output_filename);
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
-  fflush(stdout);
+  // fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
+  // fflush(stdout);
 
   _output_file << std::fixed;
 
@@ -279,8 +279,8 @@ void CellWallIOSystem::write_PDB(CellWallLipidLayer *lpl, int output_number){
   output_filename = _filename + "_layer_" + std::to_string(output_number) + pdb_ext;
 
   open_file(output_filename);
-  fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
-  fflush(stdout);
+  // fprintf(stdout, "\n\t> Write output file : %s (#%d)", output_filename.c_str(), _nwrite);
+  // fflush(stdout);
 
   _output_file << std::fixed;
 
