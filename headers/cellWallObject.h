@@ -16,6 +16,8 @@ class CellWallMonolayer{
     CellWallMonolayer(int, int);  // constructor
     ~CellWallMonolayer(); // killor
 
+    void clean_forces(); // clean force array
+
     void generate_geometry(); // generate position of masses in 3D
     void generate_glycosidic_bonds(); // generate glycosidic bonds between masses
     void generate_peptidic_bonds(); // generate peptidic bonds between masses

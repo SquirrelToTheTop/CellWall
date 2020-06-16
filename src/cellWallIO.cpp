@@ -62,8 +62,8 @@ void CellWallIOSystem::close_file(std::string filename_ext){
   if( _output_file.is_open() ){
     _output_file.close();
 
-    // fprintf(stdout, "\n\t> Closing output file : %s \n", filename_ext.c_str());
-    // fflush(stdout);
+    fprintf(stdout, "\n\t> Closing output file : %s \n", filename_ext.c_str());
+    fflush(stdout);
   }
 
 }
@@ -260,7 +260,7 @@ void CellWallIOSystem::write_PDB(CellWallLipidLayer *lpl, int output_number){
 
   int i;
 
-  double *xyz = lpl->get_coordinate_array();
+  // double *xyz = lpl->get_coordinate_array();
   int *lbond = lpl->get_lipidic_bonds_array();
 
   std::string tex = "ATOM";
@@ -284,7 +284,7 @@ void CellWallIOSystem::write_PDB(CellWallLipidLayer *lpl, int output_number){
 
   _output_file << std::fixed;
 
-  char buff[13];
+  char buff[32];
   std::string buffAsStdStr;
 
   for(i=0; i< lpl->get_total_lipids()*DIM; i+=DIM){
@@ -302,17 +302,17 @@ void CellWallIOSystem::write_PDB(CellWallLipidLayer *lpl, int output_number){
     _output_file << buffAsStdStr << "   ";
 
     // because C++ sucks so damn much 
-    sprintf(&buff[0], "%8.3f", xyz[i]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    sprintf(&buff[0], "%8.3f", lpl->coordinate_xyz[i]);
+    // buffAsStdStr = buff;
+    _output_file << buff;
 
-    sprintf(&buff[0], "%8.3f", xyz[i+1]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    sprintf(&buff[0], "%8.3f", lpl->coordinate_xyz[i+1]);
+    // buffAsStdStr = buff;
+    _output_file << buff;
 
-    sprintf(&buff[0], "%8.3f", xyz[i+2]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    sprintf(&buff[0], "%8.3f", lpl->coordinate_xyz[i+2]);
+    // buffAsStdStr = buff;
+    _output_file << buff;
 
     sprintf(&buff[0], "%6.2f", w1);
     buffAsStdStr = buff;

@@ -455,3 +455,67 @@ double compute_energy_lennardJones(CellWallMonolayer *cwl, CellWallLipidLayer *l
   return energy_lj;
 
 }
+
+/*
+ * Compute force due to the turgor pressure according to
+ * cross product 
+ * 
+ * Parameters:
+ *             lipid layer object, use coordinate array and lipid
+ *             ll_angles
+ * 
+ */
+void compute_force_pressure(CellWallLipidLayer *ll){
+  
+  int i, meshi;
+  int a, b, c, nmesh;
+  double tmp;
+  double tmp_ab[DIM], tmp_ac[DIM], f[DIM], ab_ac[DIM];
+
+  nmesh = ll->get_total_number_of_mesh();
+
+  // 1/2 of the total area given by the cross product
+  // and 1/3 beacause there is 3 points
+  tmp = 0.5f * inner_pressure / 3.0f;
+
+  meshi = 0;
+  for(i=0; i<nmesh; ++i){
+    a = ll->lipidic_mesh[meshi];
+    b = ll->lipidic_mesh[meshi+1];
+    c = ll->lipidic_mesh[meshi+2];
+
+    tmp_ab[0] = ll->coordinate_xyz[b] - ll->coordinate_xyz[a];
+    tmp_ab[1] = ll->coordinate_xyz[b+1] - ll->coordinate_xyz[a+1];
+    tmp_ab[2] = ll->coordinate_xyz[b+2] - ll->coordinate_xyz[a+2];
+
+    tmp_ac[0] = ll->coordinate_xyz[c] - ll->coordinate_xyz[a];
+    tmp_ac[1] = ll->coordinate_xyz[c+1] - ll->coordinate_xyz[a+1];
+    tmp_ac[2] = ll->coordinate_xyz[c+2] - ll->coordinate_xyz[a+2];
+
+    ab_ac[0] = tmp * (tmp_ab[1]*tmp_ac[2] - tmp_ab[2]*tmp_ab[1]);
+    ab_ac[1] = tmp * (tmp_ab[2]*tmp_ac[0] - tmp_ab[0]*tmp_ab[2]);
+    ab_ac[2] = tmp * (tmp_ab[0]*tmp_ac[1] - tmp_ab[1]*tmp_ac[0]);
+
+    ll->forces_xyz[a] += ab_ac[0];
+    ll->forces_xyz[a+1] += ab_ac[1];
+    ll->forces_xyz[a+2] += ab_ac[2];
+    
+    ll->forces_xyz[b] += ab_ac[0];
+    ll->forces_xyz[b+1] += ab_ac[1];
+    ll->forces_xyz[b+2] += ab_ac[2];
+
+    ll->forces_xyz[c] += ab_ac[0];
+    ll->forces_xyz[c+1] += ab_ac[1];
+    ll->forces_xyz[c+2] += ab_ac[2];
+
+    meshi += DIM;
+
+  }
+
+  if( meshi/DIM != nmesh ){
+    fprintf(stdout,"\n\t> Problem in loop over mesh elements !");
+    fprintf(stdout,"\n\t> %d looped over vs %d in total \n", meshi/DIM, nmesh);
+    fflush(stdout);
+  }
+
+}

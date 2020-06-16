@@ -133,6 +133,14 @@ CellWallLipidLayer::~CellWallLipidLayer(){
 
 }
 
+void CellWallLipidLayer::clean_forces(){
+  int i;
+  
+  for(i=0; i<DIM * _total_nlp; ++i)
+    forces_xyz[i] = 0.0f;
+
+}
+
 /*
  * Output information about the simulation parameters
  * 

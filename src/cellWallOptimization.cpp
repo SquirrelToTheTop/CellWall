@@ -89,8 +89,9 @@ void analyze_cpu_time_energy(CellWallMonolayer *cwl, CellWallLipidLayer *ll, int
 }
 
 /*
- *
+ * Simulated annealing methode with a fictive temperature and boltzmann constante
  * 
+ * Not great.
  * 
  */
 void optimize_simulated_annealing(CellWallMonolayer *cwl, CellWallLipidLayer *ll, int niter){
@@ -209,6 +210,214 @@ void optimize_simulated_annealing(CellWallMonolayer *cwl, CellWallLipidLayer *ll
 
 		}else{
 			fprintf(stdout,"\n\tLower state of energy %d %f nJ \n", iter, total_energy);
+			fflush(stdout);
+
+			total_prev_energy = total_energy;
+
+			iosystem->write_PDB(cwl, iter);
+      iosystem->write_PDB(ll, iter);
+
+		}
+
+	}
+
+  delete iosystem;
+
+}
+
+/*
+ * Simulated annealing methode with a fictive temperature and boltzmann constante
+ * 
+ * Not great.
+ * 
+ */
+void optimize_simulated_annealing_force(CellWallMonolayer *cwl, CellWallLipidLayer *ll, int niter){
+
+  CellWallIOSystem *iosystem = new CellWallIOSystem("out_test");
+
+  double energy_glyco, energy_pepti, energy_lipid, energy_lj;
+	double energy_glyco_glyco, energy_lipid_lipid, energy_pressure;
+  double total_energy, total_prev_energy;
+
+	int iter, i, niter_reset=0, id_pg, id_lp;
+
+	double temperature = fictive_temperature;
+	double max_dx, dx, dy, dz, norm_f, mov, proba_keep, tmp;
+
+	// save n-1
+	double *cwl_coordinate = new double[cwl->get_total_npg()*DIM];
+	double *ll_coordinate = new double[ll->get_total_lipids()*DIM];
+	double *cwl_computed_forces = new double[cwl->get_total_npg()*DIM];
+	double *ll_computed_forces = new double[ll->get_total_lipids()*DIM];
+
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_real_distribution<> dis(0.0f, 1.0f);//uniform distribution between 0.0 and 0.5
+
+	cwl->clean_forces();
+	ll->clean_forces();
+
+	total_prev_energy = 0.0f;
+	energy_glyco = compute_energy_gbond(cwl);
+	energy_glyco_glyco = compute_energy_gg_angles(cwl);
+	energy_pepti = compute_energy_pbond(cwl);
+	energy_lipid = compute_energy_lbond(ll);
+	energy_lipid_lipid = compute_energy_ll_angles(ll);
+	energy_pressure = compute_energy_pressure(ll);
+	compute_force_pressure(ll);
+	energy_lj = compute_energy_lennardJones(cwl, ll);
+
+	total_prev_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
+
+	iosystem->write_PDB(cwl, iter);
+	iosystem->write_PDB(ll, iter);
+
+	fprintf(stdout,"\n\t\t> Total initial energy of CW: %f ", total_prev_energy);
+	fprintf(stdout, "\n\t\t> G %f | P %f | GG %f |\n", energy_glyco, energy_pepti, energy_glyco_glyco);
+
+	fprintf(stdout,"\n\t\t> Total energy of lipid Layer: %f", energy_lipid + energy_lipid_lipid - energy_pressure+energy_lj);
+	fprintf(stdout, "\n\t\t> L %f | LL %f | V %f | LJ %f\n", energy_lipid, energy_lipid_lipid, -energy_pressure, energy_lj);
+
+	total_prev_energy += energy_lipid + energy_lipid_lipid - energy_pressure + energy_lj;
+	 
+	for(iter=1; iter<niter; ++iter){
+
+		id_pg = 0;
+		for(i=0; i<cwl->get_total_npg(); ++i){
+			cwl_coordinate[id_pg] = cwl->coordinate_xyz[id_pg];
+			cwl_coordinate[id_pg+1] = cwl->coordinate_xyz[id_pg+1];
+			cwl_coordinate[id_pg+2] = cwl->coordinate_xyz[id_pg+2];
+
+			cwl_computed_forces[id_pg] = cwl->forces_xyz[id_pg];
+			cwl_computed_forces[id_pg+1] = cwl->forces_xyz[id_pg+1];
+			cwl_computed_forces[id_pg+2] = cwl->forces_xyz[id_pg+2];
+
+			norm_f = cwl->forces_xyz[id_pg]*cwl->forces_xyz[id_pg];
+			norm_f += cwl->forces_xyz[id_pg+1]*cwl->forces_xyz[id_pg+1];
+			norm_f += cwl->forces_xyz[id_pg+2]*cwl->forces_xyz[id_pg+2];
+			norm_f = sqrt(norm_f);
+
+			norm_f = 0.002f; // take only 10%
+
+			// fprintf(stdout, "\n> displacement of about : %f", dis(rng) * norm_f * cwl->forces_xyz[id_pg]);
+
+			cwl->coordinate_xyz[id_pg] += norm_f * cwl->forces_xyz[id_pg];
+			cwl->coordinate_xyz[id_pg+1] += norm_f * cwl->forces_xyz[id_pg+1];
+			cwl->coordinate_xyz[id_pg+2] += norm_f * cwl->forces_xyz[id_pg+2];
+
+			// fprintf(stdout, "\n> displacement : %f", dis(rng) * norm_f * cwl->forces_xyz[id_pg]);
+
+			id_pg += DIM;
+
+		}
+
+		id_lp = 0;
+		for(i=0; i<ll->get_total_lipids(); ++i){
+			ll_coordinate[id_lp] = ll->coordinate_xyz[id_lp];
+			ll_coordinate[id_lp+1] = ll->coordinate_xyz[id_lp+1];
+			ll_coordinate[id_lp+2] = ll->coordinate_xyz[id_lp+2];
+
+			ll_computed_forces[id_lp] = ll->forces_xyz[id_lp];
+			ll_computed_forces[id_lp+1] = ll->forces_xyz[id_lp+1];
+			ll_computed_forces[id_lp+2] = ll->forces_xyz[id_lp+2];
+
+			norm_f = ll->forces_xyz[id_lp]*ll->forces_xyz[id_lp];
+			norm_f += ll->forces_xyz[id_lp+1]*ll->forces_xyz[id_lp+1];
+			norm_f += ll->forces_xyz[id_lp+2]*ll->forces_xyz[id_lp+2];
+			norm_f = sqrt(norm_f);
+
+			norm_f = 0.002f; // take only 10%f
+
+			ll->coordinate_xyz[id_lp] += norm_f * ll->forces_xyz[id_lp];
+			ll->coordinate_xyz[id_lp+1] += norm_f * ll->forces_xyz[id_lp+1];
+			ll->coordinate_xyz[id_lp+2] += norm_f * ll->forces_xyz[id_lp+2];
+
+			id_lp += DIM;
+
+		}
+
+		// compute new energy after displacement
+		cwl->clean_forces();
+		ll->clean_forces();
+
+		energy_glyco = compute_energy_gbond(cwl);
+		energy_glyco_glyco = compute_energy_gg_angles(cwl);
+		energy_pepti = compute_energy_pbond(cwl);
+		energy_lipid = compute_energy_lbond(ll);
+		energy_lipid_lipid = compute_energy_ll_angles(ll);
+		energy_pressure = compute_energy_pressure(ll);
+		compute_force_pressure(ll);
+		// energy_lj = compute_energy_lennardJones(cwl, ll);
+
+		total_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
+
+		fprintf(stdout, "\n\t> Step # %d ", iter);
+		fprintf(stdout,"\n\t\t> Total energy of CW: %f", total_energy);
+		fprintf(stdout, "\n\t\t> G %f | P %f | GG %f |\n", energy_glyco, energy_pepti, energy_glyco_glyco);
+
+		fprintf(stdout,"\n\t\t> Total energy of lipid Layer: %f", energy_lipid + energy_lipid_lipid - energy_pressure+energy_lj);
+		fprintf(stdout, "\n\t\t> L %f | LL %f | V %f | LJ %f\n", energy_lipid, energy_lipid_lipid, -energy_pressure, energy_lj);
+
+		total_energy += energy_lipid + energy_lipid_lipid - energy_pressure + energy_lj;
+
+		if( total_energy > total_prev_energy ){
+
+			// fprintf(stdout, "\n\t> State of higher energy ! ");
+
+			// compute probability of keep it anyway
+			proba_keep = exp(-(total_energy - total_prev_energy) / (fictive_kb*temperature) );
+
+			// fprintf(stdout,"\n\t\t Energy k+1 = %f", total_energy);
+			// fprintf(stdout,"\n\t\t Energy k = %f", total_prev_energy);
+			// fprintf(stdout,"\n\t\t Delta E = %f", total_energy - total_prev_energy);
+			// fprintf(stdout,"\n\t\t Proba to keep %f", proba_keep);
+			// tmp = dis(rng);
+			// fprintf(stdout,"\n\t\t Random number %f \n", tmp);
+			// fflush(stdout);
+
+			// Si le rand est inferieur a la proba de keep
+			// alors on accepte sinon on reset les positions et les forces pour un new try
+			if( tmp < proba_keep ){
+				// sinon on accepte quand meme
+				total_prev_energy = total_energy;
+
+				fprintf(stdout,"\n\t\t> ACCEPTED ! \n");
+				fflush(stdout);
+
+				iosystem->write_PDB(cwl, iter);
+        iosystem->write_PDB(ll, iter);
+
+			}else{
+
+				for(i=0; i<cwl->get_total_npg()*DIM; ++i){
+					cwl->coordinate_xyz[i] = cwl_coordinate[i];
+					cwl->forces_xyz[i] = cwl_computed_forces[i];
+				}
+
+				for(i=0; i<ll->get_total_lipids()*DIM; ++i){
+					ll->coordinate_xyz[i] = ll_coordinate[i];
+					ll->forces_xyz[i] = ll_computed_forces[i];
+				}
+
+				fprintf(stdout,"\n\t\t> REFUSED ! \n");
+				fflush(stdout);
+
+				niter_reset++;
+				if( niter_reset == 200 ){
+					niter_reset = 0;
+					// reduction de temp
+					temperature *= 0.98;
+					fprintf(stdout,"\n\t> Reduction of fictive temperarture : %f K\n", temperature);
+					fflush(stdout);	
+				}
+
+			}
+
+		}else{
+			fprintf(stdout,"\n\tState of lower energy %d \n", iter);
+			fprintf(stdout,"\n\t\t Energy k+1 = %f", total_energy);
+			fprintf(stdout,"\n\t\t Energy k = %f", total_prev_energy);
+			fprintf(stdout,"\n\t\t Delta E = %f", total_energy - total_prev_energy);
 			fflush(stdout);
 
 			total_prev_energy = total_energy;

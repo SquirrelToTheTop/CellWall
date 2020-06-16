@@ -26,4 +26,7 @@ double compute_energy_pressure(CellWallLipidLayer *ll);
 /* Compute energy of Lennard-Jones interaction between cellwall and lipid layer */
 double compute_energy_lennardJones(CellWallMonolayer *cwl, CellWallLipidLayer *ll);
 
+/* Compute force of pressure on lipid mass */
+void compute_force_pressure(CellWallLipidLayer *ll);
+
 #endif

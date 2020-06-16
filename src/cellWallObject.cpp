@@ -120,9 +120,17 @@ CellWallMonolayer::~CellWallMonolayer(){
 
   if( coordinate_xyz ){
     delete [] coordinate_xyz;
-    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array");
+    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array\n");
     fflush(stdout);
   }
+
+}
+
+void CellWallMonolayer::clean_forces(){
+  int i;
+  
+  for(i=0; i<_total_npg*DIM; ++i)
+    forces_xyz[i] = 0.0f;
 
 }
 
@@ -169,9 +177,15 @@ void CellWallMonolayer::generate_geometry(){
   fflush(stdout);
 
   int i, j, offset, offset_0;
-  double ystrand;
+  double ystrand, dy;
   double alpha = 0.0f;
   double dalpha = (2.0f*PI) / _npgstrand;
+
+  dy = d0_p; // this makes a spring at rest
+
+  // not at rest and need to correct cellwall length
+  // dy = d0_p+0.25f*d0_p;
+  // _cellwall_length = dy * _nstrands; 
 
   // make first strand, then for all strand y coordinate and z are the same
   offset=0;
@@ -186,7 +200,7 @@ void CellWallMonolayer::generate_geometry(){
 
   // set all y coordinate and propagate coordinate of first strand to others
   offset= _npgstrand*DIM; // x coordinate of first mass of second strand
-  ystrand = d0_p;
+  ystrand = dy;
   for(i=1; i<_nstrands; ++i){
     
     offset_0 = 0; // offset first strand to loop over it
@@ -200,7 +214,7 @@ void CellWallMonolayer::generate_geometry(){
     }
     
     // increase y coordinate by a peptidic distance
-    ystrand += d0_p;
+    ystrand += dy;
 
   }
 

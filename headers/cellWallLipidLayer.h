@@ -16,6 +16,8 @@ class CellWallLipidLayer{
     CellWallLipidLayer(double, double, int);  // constructor
     ~CellWallLipidLayer(); // killor
 
+    void clean_forces(); // clean force array
+
     void generate_geometry(); // generate position of masses in 3D
     void generate_bonds(); // generate lipidic bonds between masses
     void generate_mesh(); // generate mesh of the layer (used for turgor pressure computation)

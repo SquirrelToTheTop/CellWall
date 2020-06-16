@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
 
 	welcome_message();
 
-	CellWallMonolayer *cwl = new CellWallMonolayer(50,50);
+	CellWallMonolayer *cwl = new CellWallMonolayer(10,50);
 	CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
 	                                                    cwl->get_number_of_strands());
 
@@ -44,7 +44,8 @@ int main(int argc, char *argv[]){
 
 	// analyze_cpu_time_energy(cwl, llayer, 300);
 
-	optimize_simulated_annealing(cwl, llayer, 10000);
+	// optimize_simulated_annealing(cwl, llayer, 10000);
+	optimize_simulated_annealing_force(cwl, llayer, 50);
 
 	delete llayer;
 	delete cwl;
