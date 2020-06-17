@@ -470,7 +470,7 @@ void compute_force_pressure(CellWallLipidLayer *ll){
   int i, meshi;
   int a, b, c, nmesh;
   double tmp;
-  double tmp_ab[DIM], tmp_ac[DIM], f[DIM], ab_ac[DIM];
+  double tmp_ab[DIM], tmp_ac[DIM], ab_ac[DIM];
 
   nmesh = ll->get_total_number_of_mesh();
 

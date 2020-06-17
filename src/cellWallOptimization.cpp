@@ -242,7 +242,7 @@ void optimize_simulated_annealing_force(CellWallMonolayer *cwl, CellWallLipidLay
 	int iter, i, niter_reset=0, id_pg, id_lp;
 
 	double temperature = fictive_temperature;
-	double max_dx, dx, dy, dz, norm_f, mov, proba_keep, tmp;
+	double norm_f, proba_keep, tmp;
 
 	// save n-1
 	double *cwl_coordinate = new double[cwl->get_total_npg()*DIM];
@@ -269,6 +269,7 @@ void optimize_simulated_annealing_force(CellWallMonolayer *cwl, CellWallLipidLay
 
 	total_prev_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
 
+	iter = 0;
 	iosystem->write_PDB(cwl, iter);
 	iosystem->write_PDB(ll, iter);
 
@@ -371,7 +372,7 @@ void optimize_simulated_annealing_force(CellWallMonolayer *cwl, CellWallLipidLay
 			// fprintf(stdout,"\n\t\t Energy k = %f", total_prev_energy);
 			// fprintf(stdout,"\n\t\t Delta E = %f", total_energy - total_prev_energy);
 			// fprintf(stdout,"\n\t\t Proba to keep %f", proba_keep);
-			// tmp = dis(rng);
+			tmp = dis(rng);
 			// fprintf(stdout,"\n\t\t Random number %f \n", tmp);
 			// fflush(stdout);
 
