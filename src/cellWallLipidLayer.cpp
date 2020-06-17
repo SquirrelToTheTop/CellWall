@@ -23,24 +23,39 @@ CellWallLipidLayer::CellWallLipidLayer(double cw_radius, double cw_length, int c
   if(  cw_radius < 0.0f ){
     fprintf(stderr, "\n> Cell wall Radius is negative !\n");
     fflush(stderr);
-    return;
   }
 
   // compute layer radius according to cell wall radius
   // 90% of the cell wall radius could/should be adapted
-  _layer_radius = cw_radius - cut_off*1.5f;
+  _layer_radius = cw_radius * 0.8f;;
   _layer_length = cw_length;
 
-   // could be 2 but 1.5 makes less lipids masses
-  _nstrands = cw_nstrands * 1.5f;
+  if( _layer_radius > cw_radius || _layer_radius < 0 ){
+    fprintf(stderr, "\n\t> Error on _layer_radius computed size !");
+    fprintf(stderr, "\n\t> Involved variable cw_radius=%f\n", cw_radius);
+    fflush(stderr);
+  }
 
-  d0_l = _layer_length / (_nstrands-1);
+   // could be 2 but 1.5 makes less lipids masses
+  _nstrands = int(cw_nstrands * 1.5f);
+
+  d0_l = _layer_length / double(_nstrands-1);
 
   // number of lipid per strands
   _nlpstrand = int(_layer_radius * (2.0f*PI) / d0_l);
+  if( _total_nlp <= 0 ){
+    fprintf(stderr, "\n\t> Error on _nlpstrand computed size !");
+    fprintf(stderr, "\n\t> Involved variable _layer_radius=%f, d0_l=%f\n", _layer_radius, d0_l);
+    fflush(stderr);
+  }
 
   // total number of lipid masses
   _total_nlp = _nlpstrand * _nstrands;
+  if( _total_nlp <= 0 ){
+    fprintf(stderr, "\n\t> Error on _total_nlp computed size !");
+    fprintf(stderr, "\n\t> Involved variable _nlpstrand=%d, _nstrands=%d\n", _nlpstrand, _nstrands);
+    fflush(stderr);
+  }
 
   // total number of springs (bonds)
   _nlipidic_bonds = _total_nlp + (_nstrands-1)*_nlpstrand;

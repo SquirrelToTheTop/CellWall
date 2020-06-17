@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 	if( prank == 0 ){
 		welcome_message();
 
-		CellWallMonolayer *cwl = new CellWallMonolayer(10,50);
+		CellWallMonolayer *cwl = new CellWallMonolayer(10,10);
 		CellWallLipidLayer *llayer = new CellWallLipidLayer(cwl->get_radius(), cwl->get_length(), 
 																												cwl->get_number_of_strands());
 
