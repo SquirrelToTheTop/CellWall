@@ -11,6 +11,8 @@
 
 #include <string>
 
+#include <mpi.h>
+
 #include "cellWallObject.h"
 #include "cellWallLipidLayer.h"
 
@@ -40,6 +42,9 @@ class CellWallIOSystem{
     std::string _filename;
 
     int _nwrite = 0;
+
+    int _mpi_rank = 0; // rang MPI
+    int _mpi_size = 1; // total number of process
 
     void open_file(std::string filename);
     void close_file(std::string filename);

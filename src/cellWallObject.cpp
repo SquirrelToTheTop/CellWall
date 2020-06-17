@@ -29,23 +29,9 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 
   _nstrands = nstrands;
   _npgstrand = npgstrand;
-  _total_npg = nstrands * npgstrand;
 
-  _cellwall_radius = d0_g * npgstrand / (2.0f*PI);
-  
-  _cellwall_cap_radius = _cellwall_radius;
-  _cellwall_cap_nstrands = int(_cellwall_cap_radius/d0_p);
-  
-  // _cellwall_length = (nstrands-1) * d0_p + 2.0f * _cellwall_cap_radius;
-  _cellwall_length = (nstrands-1) * d0_p;
-
-  // total number of glycosidic bond 
-  _nglyco_bonds = npgstrand * nstrands;
-
-  // there is as much glyco-glyco angles as glycosidic bond
-  _nglyco_glyco_angles = _nglyco_bonds;
-
-  _npepti_bonds = (nstrands-1) * int(npgstrand/2);
+  // compute parameters
+  cellwall_parameters();
 
   // allocation of masses coordinate array
   coordinate_xyz = new double[DIM * _total_npg];
@@ -89,48 +75,165 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
 }
 
 /*
- * Destructor
+ * Constructor
+ * 
+ * Parameters:
+ *              nstrands  : number of strands for the cell wall model
+ *              npgstrand : number of masses per strand
+ *              prank     : process ID
+ *              psize     : total number of process
+ */
+CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand, int prank, int psize){
+
+  int i;
+
+  _mpi_rank = prank;
+  _mpi_size = psize;
+
+  fprintf(stdout, "\n> New CW monolayer for process %d ! \n", _mpi_rank);
+
+  if( nstrands == 0 || npgstrand == 0 ){
+    fprintf(stderr, "\n> Number of strands or number of PG/strands must be != 0\n");
+    fflush(stderr);
+    return;
+  }
+
+  if( npgstrand%2 != 0 ){
+    npgstrand++;
+    fprintf(stderr, "\n> Number of PG/strands must be pair because of the bond model\n");
+    fflush(stderr);
+  }
+
+  _nstrands = nstrands;
+  _npgstrand = npgstrand;
+
+  // compute parameters
+  cellwall_parameters();
+
+  // allocation of masses coordinate array
+  coordinate_xyz = new double[DIM * _total_npg];
+  _memory_consumption += (sizeof(coordinate_xyz[0])*(DIM*_total_npg)) / (MBYTES);
+
+  // allocation of masses forces array
+  forces_xyz = new double[DIM * _total_npg];
+  _memory_consumption += (sizeof(forces_xyz[0])*(DIM*_total_npg)) / (MBYTES);
+  
+  // set all forces to 0.0f at the begining of the simulation
+  for(i=0; i<DIM*_total_npg; ++i )
+    forces_xyz[i] = 0.0f;
+
+  // x2 because one bond is made of two masses
+  // and glyco_bonds will contains the masses "x" index in coordinate_xyz
+  glyco_bonds = new int[_nglyco_bonds * 2];
+  _memory_consumption += (sizeof(glyco_bonds[0])*(_nglyco_bonds*2)) / (MBYTES);
+
+  // same idea as glyco_bonds
+  pepti_bonds = new int[_npepti_bonds * 2];
+  _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds*2)) / (MBYTES);
+
+  // array of index of bonds for glycosidic-glycosidic angles
+  gg_angles = new int[_nglyco_glyco_angles * 2];
+  _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*2)) / (MBYTES);
+
+  if( _mpi_size > 1 ){
+    fprintf(stdout, "\n\t> Allocation of CW array (P%d) !", _mpi_rank);
+    fprintf(stdout, "\n\t> Memory consumption (P%d): %f MBytes \n", _mpi_rank, _memory_consumption);
+  }else{
+    fprintf(stdout, "\n\t> Allocation of CW array !");
+    fprintf(stdout, "\n\t> Memory consumption: %f MBytes \n", _memory_consumption);
+  }
+  fflush(stdout);
+
+}
+
+/*
+ * Destructor for array deallocation
  *
  */
 CellWallMonolayer::~CellWallMonolayer(){
 
-  if( gg_angles ){
+  if( gg_angles )
     delete [] gg_angles;
-    fprintf(stdout, "\n\t> Deallocation of gg_angles array");
-    fflush(stdout);
-  }
 
-  if( pepti_bonds ){
+  if( pepti_bonds )
     delete [] pepti_bonds;
-    fprintf(stdout, "\n\t> Deallocation of pepti_bonds array");
-    fflush(stdout);
-  }
 
-  if( glyco_bonds ){
+  if( glyco_bonds )
     delete [] glyco_bonds;
-    fprintf(stdout, "\n\t> Deallocation of glyco_bonds array");
-    fflush(stdout);
-  }
 
-  if( forces_xyz ){
+  if( forces_xyz )
     delete [] forces_xyz;
-    fprintf(stdout, "\n\t> Deallocation of forces_xyz array");
-    fflush(stdout);
-  }
 
-  if( coordinate_xyz ){
+  if( coordinate_xyz )
     delete [] coordinate_xyz;
-    fprintf(stdout, "\n\t> Deallocation of coordinate_xyz array\n");
-    fflush(stdout);
+
+  if( _mpi_size > 1 ){
+    fprintf(stdout, "\n\t> Deallocation of CW array (P%d) !\n", _mpi_rank);
+  }else{
+    fprintf(stdout, "\n\t> Deallocation of CW array !\n");
   }
+  fflush(stdout);
 
 }
 
+/*
+ * Reset du tableau des forces
+ * 
+ */
 void CellWallMonolayer::clean_forces(){
   int i;
   
   for(i=0; i<_total_npg*DIM; ++i)
     forces_xyz[i] = 0.0f;
+
+}
+
+/*
+ * Calcul des parametres de la CellWall
+ * 
+ * _total_npg : nombre total de masses dans le CW
+ * _cellwall_radius : rayon initial du CW
+ * _cellwall_length : longueur initial du CW
+ * 
+ * _cellwall_cap_radius : rayon initial pour le CAP (CAP not implemented yet)
+ * _cellwall_cap_nstrands : nombre de strands pour le CAP (CAP not implemented yet)
+ * 
+ * _nglyco_bonds : nombre de ressort de type glycosidic
+ * _nglyco_glyco_angles : nombre d'angle type 'PI' entre deux liasisons glyco (meme strand)
+ * _npepti_bonds : nombre de ressort de type peptidic
+ * 
+ */
+void CellWallMonolayer::cellwall_parameters(){
+
+  if( _mpi_size > 1 ){
+
+    if( _mpi_rank > 0 ){
+      _nghost_strands = 1;
+      _nghost_npg = _npgstrand;
+    }
+
+    _nghost_nglyco_bonds = _nghost_strands;
+    _nghost_gg_angles = _nghost_nglyco_bonds;
+    _nghost_npepti_bonds = _nghost_strands * int(_npgstrand/2);
+  }
+
+  _total_npg = _nstrands * _npgstrand + _nghost_npg;
+
+  _cellwall_radius = d0_g * _npgstrand / (2.0f*PI);
+  
+  _cellwall_cap_radius = _cellwall_radius;
+  _cellwall_cap_nstrands = int(_cellwall_cap_radius/d0_p);
+  
+  // _cellwall_length = (nstrands-1) * d0_p + 2.0f * _cellwall_cap_radius;
+  _cellwall_length = (_nstrands-1) * d0_p;
+
+  // total number of glycosidic springs 
+  _nglyco_bonds = _npgstrand * _nstrands;
+
+  // there is as much glyco-glyco angles as glycosidic bond
+  _nglyco_glyco_angles = _nglyco_bonds;
+
+  _npepti_bonds = (_nstrands-1) * int(_npgstrand/2) + _nghost_npepti_bonds;
 
 }
 
@@ -143,12 +246,26 @@ void CellWallMonolayer::simulation_infos(){
   fprintf(stdout, "\n\t> Simulation parameters for the cellwall : \n");
   fprintf(stdout, "\n\t\t> Number of strands : %d", _nstrands);
   fprintf(stdout, "\n\t\t> Number of pg/strands : %d", _npgstrand);
+
+  if( _mpi_size > 1 ){
+    fprintf(stdout, "\n\t\t> Number of ghost strands (P%d): %d ", _mpi_rank, _nghost_strands);
+    fprintf(stdout, "\n\t\t> Number of ghost PG      (P%d): %d ", _mpi_rank, _nghost_npg);
+  }
+
   fprintf(stdout, "\n\t\t> Total number of PG: %d\n", _total_npg);
   fprintf(stdout, "\n\t\t> CellWall radius: %f nm", _cellwall_radius);
   fprintf(stdout, "\n\t\t> CellWall length: %f nm\n", _cellwall_length);
+
   fprintf(stdout, "\n\t\t> Total number of G-springs: %d", _nglyco_bonds);
   fprintf(stdout, "\n\t\t> Total number of G-G angles: %d", _nglyco_glyco_angles);
   fprintf(stdout, "\n\t\t> Total number of P-springs: %d\n", _npepti_bonds);
+
+  if( _mpi_size > 1 ){
+    fprintf(stdout, "\n\t\t> Number of ghost G-springs  (P%d): %d", _mpi_rank, _nghost_nglyco_bonds);
+    fprintf(stdout, "\n\t\t> Number of ghost G-G angles (P%d): %d", _mpi_rank, _nghost_gg_angles);
+    fprintf(stdout, "\n\t\t> Number of ghost P-springs  (P%d): %d\n", _mpi_rank, _nghost_npepti_bonds);
+  }
+
   fflush(stdout);
 
 }
@@ -176,22 +293,39 @@ void CellWallMonolayer::generate_geometry(){
   fprintf(stdout, "\n\t> Generate cell wall masses position in 3D coordinate");
   fflush(stdout);
 
-  int i, j, offset, offset_0;
-  double ystrand, dy;
+  int i, j, offset, offset_loop, offset_0;
+  double ystrand, dy, y_end;
   double alpha = 0.0f;
   double dalpha = (2.0f*PI) / _npgstrand;
 
   dy = d0_p; // this makes a spring at rest
 
-  // not at rest and need to correct cellwall length
-  // dy = d0_p+0.25f*d0_p;
-  // _cellwall_length = dy * _nstrands; 
+  // shift pour les ghosts
+  offset = 0;
+  offset_0 = 0;
+  if( _mpi_size > 1 ){
+    offset = _nghost_npg*DIM;
+    offset_0 = offset;
 
-  // make first strand, then for all strand y coordinate and z are the same
-  offset=0;
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if( _mpi_rank != 0 ){
+      MPI_Recv(&_y0, 1, MPI_DOUBLE, _mpi_rank-1, 52, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      fprintf(stdout, "\n\t> (P%d) _y0 = %f, _yn = %f", _mpi_rank, _y0, y_end);
+      _y0 += d0_p;
+    }
+
+    if( _mpi_rank != _mpi_size -1 ){
+      y_end = _y0 + (_nstrands-1)*dy;
+      MPI_Send(&y_end, 1, MPI_DOUBLE, _mpi_rank+1 , 52, MPI_COMM_WORLD);
+    }
+    
+  }
+
+  // make first strand (after ghost), then for all strand y coordinate and z are the same
   for(i=0; i<_npgstrand; ++i){
     coordinate_xyz[offset] = _cellwall_radius * cos(alpha); // x coordinate
-    coordinate_xyz[offset+1] = 0.0f; // y coordinate (first strand @ (x,0,z))
+    coordinate_xyz[offset+1] = _y0; // y coordinate (first strand @ (x,0,z))
     coordinate_xyz[offset+DIM-1] = _cellwall_radius * sin(alpha); // z coordinate
     alpha += dalpha;
 
@@ -199,23 +333,40 @@ void CellWallMonolayer::generate_geometry(){
   }
 
   // set all y coordinate and propagate coordinate of first strand to others
-  offset= _npgstrand*DIM; // x coordinate of first mass of second strand
-  ystrand = dy;
+  // offset += _npgstrand*DIM; // x coordinate of first mass of second strand
+  ystrand = _y0 +  dy;
   for(i=1; i<_nstrands; ++i){
     
-    offset_0 = 0; // offset first strand to loop over it
+    offset_loop = offset_0; // offset first strand to loop over it
     for(j=0; j<_npgstrand; ++j){
-      coordinate_xyz[offset] = coordinate_xyz[offset_0]; // x coordinate
+      coordinate_xyz[offset] = coordinate_xyz[offset_loop]; // x coordinate
       coordinate_xyz[offset+1] = ystrand; // y coordinate
-      coordinate_xyz[offset+2] = coordinate_xyz[offset_0+2]; // z coordinate
+      coordinate_xyz[offset+2] = coordinate_xyz[offset_loop+2]; // z coordinate
 
       offset += DIM;
-      offset_0 += DIM;
+      offset_loop += DIM;
     }
     
     // increase y coordinate by a peptidic distance
     ystrand += dy;
 
+  }
+
+  // Interprocess communication
+  if( _mpi_size > 1 ){
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if( _mpi_rank != _mpi_size -1 ){
+      MPI_Send(&coordinate_xyz[(_total_npg-_npgstrand)*DIM], _npgstrand*DIM, MPI_DOUBLE, 
+               _mpi_rank+1, 52, MPI_COMM_WORLD);
+    }
+
+    if( _mpi_rank != 0 ){
+      MPI_Recv(&coordinate_xyz[0], _npgstrand*DIM, MPI_DOUBLE, _mpi_rank-1, 52, 
+               MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+    
   }
 
   // just test the distance between two point of first strand
@@ -272,9 +423,16 @@ void CellWallMonolayer::generate_glycosidic_bonds(){
   fprintf(stdout, "\t> Generate cell wall glycosidic springs ... ");
   fflush(stdout);
 
-  // glycosidic bonds
-  mi = 0;
-  mj = DIM;
+  // we skip ghost pg and do not take into account glyco spring
+  // since its taken into account on _mpi_rank-1 process
+  if( _mpi_size > 1 && _mpi_rank > 0 ){
+    mi = _npgstrand*DIM;
+    mj = mi+DIM;
+  }else{
+    mi = 0;
+    mj = DIM;
+  }
+
   bi = 0;
   ai = 0;
   for(i=0; i<_nstrands; ++i){
@@ -352,7 +510,8 @@ void CellWallMonolayer::generate_peptidic_bonds(){
   mj=(_npgstrand*DIM)+DIM;
 
   bi=0;
-  for(i=0; i<_nstrands-1; ++i){
+  // take into account ghost pg
+  for(i=0; i<(_nstrands+_nghost_strands)-1; ++i){
 
     // this allow to switch between odd and even strand
     // to prevent linking the same mass on the strand before and after
@@ -408,6 +567,10 @@ int * CellWallMonolayer::get_peptidic_bonds_array(){
 
 int CellWallMonolayer::get_total_npg(){
   return _total_npg;
+}
+
+int CellWallMonolayer::get_number_of_ghost_pg(){
+  return _nghost_npg;
 }
 
 int CellWallMonolayer::get_total_glycobonds(){

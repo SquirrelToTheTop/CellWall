@@ -1,6 +1,8 @@
 #ifndef CELLWALLMONOLAYER_CLASS
 #define CELLWALLMONOLAYER_CLASS
 
+#include <mpi.h>
+
 #include "cellWallParams.h"
 #include "math.h"
 
@@ -14,6 +16,7 @@ class CellWallMonolayer{
 
   public:
     CellWallMonolayer(int, int);  // constructor
+    CellWallMonolayer(int, int, int, int); // constructor for MPI
     ~CellWallMonolayer(); // killor
 
     void clean_forces(); // clean force array
@@ -24,6 +27,7 @@ class CellWallMonolayer{
 
     // getter
     int get_total_npg(); // get total of masses
+    int get_number_of_ghost_pg(); // get total of ghost masses
     int get_total_glycobonds(); // get total number of glycosidic bonds
     int get_total_gg_angles(); // get total number of glycosidic - glycosidic angles
     int get_total_peptibonds(); // get total number of peptidic bonds
@@ -39,6 +43,9 @@ class CellWallMonolayer{
 
     // display import information about the cellwall model
     void simulation_infos();
+
+  private:
+    void cellwall_parameters();
   
   public:
 
@@ -67,14 +74,29 @@ class CellWallMonolayer{
 
   private:
     int _nstrands = 0; // number of strands
+    int _nghost_strands = 0; // number of ghost strands
+
     int _npgstrand = 0; // number of peptidoglycans per strand
+
     int _total_npg = 0; // total number of peptidoglycans
-    int _nglyco_bonds = 0; // number of peptidic bonds (bond between masses on same strand)
+    int _nghost_npg = 0; // number of ghost peptidogycans
+
+    int _nglyco_bonds = 0; // number of glycosidic springs (bond between masses on same strand)
+    int _nghost_nglyco_bonds = 0; // number of ghost glycosidic springs
+
     int _nglyco_glyco_angles = 0; // number of glycosidic-glycosidic angles
+    int _nghost_gg_angles = 0; // number of ghost glycosidic-glycosidic angles
+
     int _npepti_bonds = 0; // number of peptidic bonds (bond between masses on different strand)
+    int _nghost_npepti_bonds = 0; // number of ghost peptidic bonds 
+
+    int _mpi_rank = 0; // rang MPI
+    int _mpi_size = 1; // total number of process
 
     double _cellwall_radius = 0.0f;
     double _cellwall_length = 0.0f;
+
+    double _y0 = 0.0f; // y coordinate for first strand
 
     int _cellwall_cap_nstrands = 0; // number of strand in one cap
     double _cellwall_cap_radius = 0.0f; // radius of caps

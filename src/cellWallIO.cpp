@@ -7,6 +7,9 @@ CellWallIOSystem::CellWallIOSystem(std::string filename){
 
   _filename = filename;
 
+  MPI_Comm_size(MPI_COMM_WORLD, &_mpi_rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &_mpi_size);
+
   fprintf(stdout, "\n\t> Initialize IO system !");
   fflush(stdout);
 
