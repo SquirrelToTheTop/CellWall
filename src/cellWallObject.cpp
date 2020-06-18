@@ -219,13 +219,13 @@ void CellWallMonolayer::cellwall_parameters(){
 
   _total_npg = _nstrands * _npgstrand + _nghost_npg;
 
-  _cellwall_radius = d0_g * _npgstrand / (2.0f*PI);
+  _cellwall_radius = d0_g * double(_npgstrand) / (2.0f*PI);
   
   _cellwall_cap_radius = _cellwall_radius;
   _cellwall_cap_nstrands = int(_cellwall_cap_radius/d0_p);
   
   // _cellwall_length = (nstrands-1) * d0_p + 2.0f * _cellwall_cap_radius;
-  _cellwall_length = (_nstrands-1) * d0_p;
+  _cellwall_length = double(_nstrands-1) * d0_p;
 
   // total number of glycosidic springs 
   _nglyco_bonds = _npgstrand * _nstrands;
@@ -296,7 +296,7 @@ void CellWallMonolayer::generate_geometry(){
   int i, j, offset, offset_loop, offset_0;
   double ystrand, dy, y_end;
   double alpha = 0.0f;
-  double dalpha = (2.0f*PI) / _npgstrand;
+  double dalpha = (2.0f*PI) / double(_npgstrand);
 
   dy = d0_p; // this makes a spring at rest
 
@@ -311,7 +311,6 @@ void CellWallMonolayer::generate_geometry(){
 
     if( _mpi_rank != 0 ){
       MPI_Recv(&_y0, 1, MPI_DOUBLE, _mpi_rank-1, 52, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      fprintf(stdout, "\n\t> (P%d) _y0 = %f, _yn = %f", _mpi_rank, _y0, y_end);
       _y0 += d0_p;
     }
 
@@ -328,7 +327,6 @@ void CellWallMonolayer::generate_geometry(){
     coordinate_xyz[offset+1] = _y0; // y coordinate (first strand @ (x,0,z))
     coordinate_xyz[offset+DIM-1] = _cellwall_radius * sin(alpha); // z coordinate
     alpha += dalpha;
-
     offset += DIM;
   }
 

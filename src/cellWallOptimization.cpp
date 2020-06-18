@@ -16,6 +16,62 @@
  * 
  * 
  */
+void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
+
+  double energy_glyco, energy_pepti;
+	double energy_glyco_glyco;
+  double total_energy;
+
+	clock_t start, end;
+	double cpu_time_used[7];
+
+  std::string * ener_msg = new std::string[7] { "Spring G", "Angles G-G", "Spring P"};
+
+	int iter;
+
+	for(int i=0; i<7; ++i)
+		cpu_time_used[i] = 0.0f;
+
+	for(iter=0; iter<1000; ++iter){
+
+    if( iter%100 == 0 ){
+		  fprintf(stdout,"\n\t> (P%d) Iteration # %d ", mpi_rank, iter);
+	  	fflush(stdout);
+    }
+
+		start = clock();
+		energy_glyco = compute_energy_gbond(cwl);
+		end = clock();
+		cpu_time_used[0] += ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		start = clock();
+		// energy_glyco_glyco = compute_energy_gg_angles(cwl);
+		end = clock();
+		cpu_time_used[1] += ((double) (end - start)) / CLOCKS_PER_SEC;
+
+		// Should be null at begining because by construction the distance between two
+		// strand is equal to d0_p which is the lenght of the spring at rest
+		start = clock();
+		energy_pepti = compute_energy_pbond(cwl);
+		end = clock();
+		cpu_time_used[2] += ((double) (end - start)) / CLOCKS_PER_SEC;
+
+    total_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
+
+	}
+
+  for(iter=0; iter<3; iter++){
+    fprintf(stdout, "\n\t> (P%d) Average elasped time for energy %s : %f s", mpi_rank, ener_msg[iter].c_str(), cpu_time_used[iter]/1000.0f);
+  }
+  fprintf(stdout,"\n");
+
+}
+
+/*
+ *
+ * 
+ * 
+ */
 void analyze_cpu_time_energy(CellWallMonolayer *cwl, CellWallLipidLayer *ll, int niter){
 
   double energy_glyco, energy_pepti, energy_lipid, energy_lj;

@@ -180,35 +180,28 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
     _output_file << std::left << std::setw(6) << tex;
     
     sprintf(&buff[0], "%5d", idm);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
     
     _output_file << "  " << std::setw(3) << typ << " " << std::setw(3) << res << " ";
 
     sprintf(&buff[0], "%5d", ipg);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr << "   ";
+    _output_file << buff << "   ";
 
     // because C++ sucks so damn much 
     sprintf(&buff[0], "%8.3f", xyz[i]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%8.3f", xyz[i+1]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%8.3f", xyz[i+2]);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%6.2f", w1);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%6.2f", w2);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     _output_file << " " << std::fixed << std::setw(4) << segid << std::endl;
 
@@ -220,12 +213,10 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
     _output_file << std::setw(5) << conect;
     
     sprintf(&buff[0], "%5d", int(gbond[i]/3)+1);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%5d", int(gbond[i+1]/3)+1);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr << std::endl;
+    _output_file << buff << std::endl;
 
   }
 
@@ -234,12 +225,10 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
     _output_file << std::setw(5) << conect;
     
     sprintf(&buff[0], "%5d", int(pbond[i]/3)+1);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr;
+    _output_file << buff;
 
     sprintf(&buff[0], "%5d", int(pbond[i+1]/3)+1);
-    buffAsStdStr = buff;
-    _output_file << buffAsStdStr << std::endl;
+    _output_file << buff << std::endl;
 
   }
 
