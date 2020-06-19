@@ -15,4 +15,10 @@ void optimize_simulated_annealing(CellWallMonolayer *, CellWallLipidLayer *, int
 // Simulated annealing technic or also called "recuit simulé" in sexy french
 void optimize_simulated_annealing_force(CellWallMonolayer *, CellWallLipidLayer *, int);
 
+// conjugate gradient
+void conjugate_gradient(CellWallMonolayer *, int, int);
+
+// test MC
+void MC_simulated_annealing(CellWallMonolayer *cwl, int mpi_rank, int mpi_size);
+
 #endif

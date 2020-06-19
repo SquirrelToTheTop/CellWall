@@ -26,8 +26,8 @@ int main(int argc, char *argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
-	nstrands = 600;
-	npgstrand = 250;
+	nstrands = 128;
+	npgstrand = 64;
 
 	if( nrank < 2 ){
 		cwl = new CellWallMonolayer(nstrands, npgstrand);
@@ -70,9 +70,19 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}
 
-	CellWallIOSystem *cio = new CellWallIOSystem("out");
+	CellWallIOSystem *cio;
+	cio = new CellWallIOSystem("initial");
 	cio->write_PDB(cwl, prank);
 	delete cio;
+
+	MC_simulated_annealing(cwl, prank, nrank);
+
+	// for(int i=0; i<100; ++i)
+	// 	conjugate_gradient(cwl, prank, nrank);
+
+	// cio = new CellWallIOSystem("post_CG");
+	// cio->write_PDB(cwl, prank);
+	// delete cio;
 
 	// llayer->simulation_infos();
 	// llayer->generate_geometry();

@@ -10,11 +10,16 @@
 #include "cellWallLipidLayer.h"
 #include "cellWallIO.h"
 #include "cellWallOptimization.h"
+#include "cellWallUtils.h"
 
 /*
- *
+ * Benchmarks of energy computation for CW: glycosidic springs, peptidic springs
+ * and glycosidic-glycosidic angles
  * 
- * 
+ * Parameters:
+ * 						 cwl : pointor to CW object
+ * 						 mpi_rank : ID of current MPI process
+ * 						 mpi_size : number of process
  */
 void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
 
@@ -23,21 +28,16 @@ void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
   double total_energy;
 
 	clock_t start, end;
-	double cpu_time_used[7];
+	double cpu_time_used[3];
 
   std::string * ener_msg = new std::string[7] { "Spring G", "Angles G-G", "Spring P"};
 
 	int iter;
 
-	for(int i=0; i<7; ++i)
+	for(int i=0; i<3; ++i)
 		cpu_time_used[i] = 0.0f;
 
 	for(iter=0; iter<1000; ++iter){
-
-    if( iter%100 == 0 ){
-		  fprintf(stdout,"\n\t> (P%d) Iteration # %d ", mpi_rank, iter);
-	  	fflush(stdout);
-    }
 
 		start = clock();
 		energy_glyco = compute_energy_gbond(cwl);
@@ -489,3 +489,193 @@ void optimize_simulated_annealing_force(CellWallMonolayer *cwl, CellWallLipidLay
   delete iosystem;
 
 }
+
+/*
+ * Attempt to use a conjugate gradient
+ * 
+ */
+void conjugate_gradient(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
+
+	int npg_dim=cwl->get_total_npg()*DIM;
+	
+	int i, k;
+	double cw_energy;;
+	double cw_gbond, cw_pepti, cw_gg_angles;
+
+	double beta_k = 0.001f;
+	double alpha_k = 0.001f;
+	double d_k[npg_dim];
+
+	if( mpi_rank == 0 ){
+		fprintf(stdout, "\n\t> Conjugate gradient algorithm: ");
+	}
+
+	cw_gbond = compute_energy_gbond(cwl);
+	fprintf(stdout,"\n\t\t> (P%d) CW G-bond energy : %f", mpi_rank, cw_gbond);
+	fflush(stdout);
+	MPI_Reduce(&cw_gbond, &cw_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	if( mpi_rank == 0 ){
+		fprintf(stdout,"\n\t\t> CW G-spring energy : %f", cw_energy);
+		fflush(stdout);
+	}
+
+	cw_pepti = compute_energy_pbond(cwl);
+	fprintf(stdout,"\n\t\t> (P%d) CW P-spring energy : %f", mpi_rank, cw_pepti);
+	fflush(stdout);
+	MPI_Reduce(&cw_pepti, &cw_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	if( mpi_rank == 0 ){
+		fprintf(stdout,"\n\t\t> CW P-bond energy : %f", cw_energy);
+		fflush(stdout);
+	}
+
+	for(i=0; i<npg_dim; ++i){
+		d_k[i] = -cwl->forces_xyz[i];
+	}
+
+	for(k=0; k<10; ++k){
+
+		// fprintf(stdout,"\n\t\t> Iteration # %d", k);
+		// fflush(stdout);
+		for(i=0; i<npg_dim; ++i){
+			d_k[i] = -cwl->forces_xyz[i] + beta_k * d_k[i];
+		}
+
+	}
+
+	for(i=0; i<npg_dim; ++i){
+		cwl->coordinate_xyz[i] = cwl->coordinate_xyz[i] + alpha_k * d_k[i];
+	}
+
+	cw_gbond = compute_energy_gbond(cwl);
+	fprintf(stdout,"\n\t\t> (P%d) CW G-bond energy : %f", mpi_rank, cw_gbond);
+	fflush(stdout);
+	MPI_Reduce(&cw_gbond, &cw_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	if( mpi_rank == 0 ){
+		fprintf(stdout,"\n\t\t> CW G-spring energy : %f", cw_energy);
+		fflush(stdout);
+	}
+
+	cw_pepti = compute_energy_pbond(cwl);
+	fprintf(stdout,"\n\t\t> (P%d) CW P-spring energy : %f", mpi_rank, cw_pepti);
+	fflush(stdout);
+	MPI_Reduce(&cw_pepti, &cw_energy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	if( mpi_rank == 0 ){
+		fprintf(stdout,"\n\t\t> CW P-bond energy : %f", cw_energy);
+		fflush(stdout);
+	}
+
+	// this need to be checker and modified for MPI
+	// cw_gg_angles = compute_energy_gg_angles(cwl);
+
+	
+
+
+}
+
+/*
+ * This must be corrected for MPI
+ * 
+ */
+void MC_simulated_annealing(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
+	
+	int rand_id, i;
+	double cw_energy_n, cw_energy_np;
+	double cw_gbond_n, cw_gbond_np, cw_pepti_n, cw_pepti_np;
+
+	double proba;
+
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_real_distribution<> dis(0.0f, 1.0f);//uniform distribution between 0.0 and 0.5
+	std::uniform_int_distribution<> rand_pg(0,cwl->get_total_npg()-1);
+
+	double *cwl_coordinate = new double[cwl->get_total_npg()*DIM];
+	double *cwl_forces = new double[cwl->get_total_npg()*DIM];
+
+	CellWallIOSystem *iosystem = new CellWallIOSystem("MC_test");
+
+	fprintf(stdout, "\n\t> Monte-Carlo Simulated Annealing minimisation");
+
+	cwl->clean_forces();
+	cw_gbond_n = compute_energy_gbond(cwl);
+	cw_pepti_n = compute_energy_pbond(cwl);
+	cw_energy_n = cw_gbond_n + cw_pepti_n;
+
+	fprintf(stdout,"\n\t\t> (P%d) CW G-bond energy 0 : %f", mpi_rank, cw_gbond_n);
+	fprintf(stdout,"\n\t\t> (P%d) CW P-spring energy 0 : %f", mpi_rank, cw_pepti_n);
+	fprintf(stdout,"\n\t\t> (P%d) CW total energy 0 : %f", mpi_rank, cw_energy_n);
+	fprintf(stdout,"\n\t> Norm vector forces : %f\n", norm_vect(&(cwl->forces_xyz[0]),cwl->get_total_npg()*DIM ));
+
+	for(i=0; i<cwl->get_total_npg()*DIM; ++i){
+		cwl_coordinate[i] = cwl->coordinate_xyz[i];
+		cwl_forces[i] = cwl->forces_xyz[i];
+	}
+
+	for(int iter=0; iter<2000000; ++iter){
+
+		rand_id = rand_pg(rng) * DIM;
+
+		// fprintf(stdout, "\n\t> Iteration # %d ramdonly selected PG : %d", iter, rand_id);
+		// fprintf(stdout, "\n\t\t> Force x : %f", cwl->forces_xyz[rand_id]);
+		// fprintf(stdout, "\n\t\t> Force y : %f", cwl->forces_xyz[rand_id+1]);
+		// fprintf(stdout, "\n\t\t> Force z : %f", cwl->forces_xyz[rand_id+2]);
+
+		// move the selected PG in the force direction 
+		cwl->coordinate_xyz[rand_id] +=  0.01f * cwl->forces_xyz[rand_id];
+		cwl->coordinate_xyz[rand_id+1] += 0.01f * cwl->forces_xyz[rand_id+1];
+		cwl->coordinate_xyz[rand_id+2] += 0.01f * cwl->forces_xyz[rand_id+2];
+
+		cwl->clean_forces();
+		cw_gbond_np = compute_energy_gbond(cwl);
+		cw_pepti_np = compute_energy_pbond(cwl);
+		cw_energy_np = cw_gbond_np + cw_pepti_np;
+
+		// check new total energy
+		if( cw_energy_np < cw_energy_n ){
+			cw_energy_n = cw_energy_np;
+
+			fprintf(stdout, "\n\t\t> Accepted new state # %f", cw_energy_np);
+			fprintf(stdout,"\n\t\t> (P%d) CW G-bond energy: %f", mpi_rank, cw_gbond_np);
+			fprintf(stdout,"\n\t\t> (P%d) CW P-spring energy: %f", mpi_rank, cw_pepti_np);
+			fprintf(stdout,"\n\t\t> (P%d) CW total energy: %f", mpi_rank, cw_energy_np);
+			fprintf(stdout,"\n\t\t> Norm vector forces : %f\n", norm_vect(&(cwl->forces_xyz[0]),cwl->get_total_npg()*DIM ));
+			iosystem->write_PDB(cwl, iter);
+
+		}else{
+
+			proba = exp(-(cw_energy_np - cw_gbond_n) / (fictive_kb*fictive_temperature) );
+
+			if( dis(rng) < proba ){
+				cw_energy_n = cw_energy_np;
+
+				fprintf(stdout, "\n\t\t> Accepted new state # %f - P(n+1) = %f", cw_energy_np, proba);
+				fprintf(stdout,"\n\t\t> (P%d) CW G-bond energy: %f", mpi_rank, cw_gbond_np);
+				fprintf(stdout,"\n\t\t> (P%d) CW P-spring energy: %f", mpi_rank, cw_pepti_np);
+				fprintf(stdout,"\n\t\t> (P%d) CW total energy: %f", mpi_rank, cw_energy_np);
+				fprintf(stdout,"\n\t\t> Norm vector forces : %f\n", norm_vect(&(cwl->forces_xyz[0]),cwl->get_total_npg()*DIM ));
+				iosystem->write_PDB(cwl, iter);
+			}else{
+
+				// fprintf(stdout, "\n\t\t> Refused new state %f -> P(n+1) = %f \n", cw_energy_np, proba);
+				cwl->coordinate_xyz[rand_id] = cwl_coordinate[rand_id];
+				cwl->coordinate_xyz[rand_id+1] = cwl_coordinate[rand_id+1];
+				cwl->coordinate_xyz[rand_id+2] = cwl_coordinate[rand_id+2];
+
+				for(i=0; i<cwl->get_total_npg()*DIM; ++i){
+					cwl->forces_xyz[i] = cwl_forces[i];
+				}
+			}
+
+		}
+
+
+	}
+
+}
+
+
+

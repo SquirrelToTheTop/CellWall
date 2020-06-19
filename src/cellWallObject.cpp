@@ -298,7 +298,7 @@ void CellWallMonolayer::generate_geometry(){
   double alpha = 0.0f;
   double dalpha = (2.0f*PI) / double(_npgstrand);
 
-  dy = d0_p; // this makes a spring at rest
+  dy = d0_p*1.01f; // this makes a spring at rest
 
   // shift pour les ghosts
   offset = 0;

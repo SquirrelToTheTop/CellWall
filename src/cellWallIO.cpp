@@ -21,8 +21,8 @@ CellWallIOSystem::CellWallIOSystem(std::string filename){
  */
 CellWallIOSystem::~CellWallIOSystem(){
 
-  fprintf(stdout, "\n\n\t> Cleaning IO system !\n");
-  fflush(stdout);
+  // fprintf(stdout, "\n\t> Cleaning IO system !\n");
+  // fflush(stdout);
   
 }
 
@@ -173,7 +173,6 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
   _output_file << std::fixed;
 
   char buff[13];
-  std::string buffAsStdStr;
 
   for(i=0; i< cwm->get_total_npg()*DIM; i+=DIM){
  

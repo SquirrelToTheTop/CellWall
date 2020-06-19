@@ -31,6 +31,6 @@ const double cut_off = 2.5f; // nm cut off for LJ potential
 const int output_iter = 200; // output data each # iter
 
 const double fictive_temperature = 273.5f; // Kelvin for annealing
-const double fictive_kb = 3.1415f; // fictive boltzman constant for annealing
+const double fictive_kb = 0.31415f; // fictive boltzman constant for annealing
 
 #endif

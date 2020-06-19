@@ -24,9 +24,9 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
     mi = cwl->glyco_bonds[i];
     mj = cwl->glyco_bonds[i+1];
 
-    x = cwl->coordinate_xyz[mj] - cwl->coordinate_xyz[mi];
-    y = cwl->coordinate_xyz[mj+1] - cwl->coordinate_xyz[mi+1];
-    z = cwl->coordinate_xyz[mj+2] - cwl->coordinate_xyz[mi+2];
+    x = cwl->coordinate_xyz[mi] - cwl->coordinate_xyz[mj];
+    y = cwl->coordinate_xyz[mi+1] - cwl->coordinate_xyz[mj+1];
+    z = cwl->coordinate_xyz[mi+2] - cwl->coordinate_xyz[mj+2];
 
     dij = sqrt(x*x + y*y + z*z);
 
