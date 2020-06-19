@@ -26,8 +26,8 @@ int main(int argc, char *argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
-	nstrands = 128;
-	npgstrand = 64;
+	nstrands = 12;
+	npgstrand = 8;
 
 	if( nrank < 2 ){
 		cwl = new CellWallMonolayer(nstrands, npgstrand);
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	cwl->generate_glycosidic_bonds();
 	cwl->generate_peptidic_bonds();
 
-	benchmarks_energy_cw(cwl, prank, nrank);
+	// benchmarks_energy_cw(cwl, prank, nrank);
 
 	double energy_glyco = compute_energy_gbond(cwl);
 	fprintf(stdout, "\n\t> (P%d) Energy G spring : %f ", prank, energy_glyco);
@@ -66,7 +66,20 @@ int main(int argc, char *argv[]){
 	double total_energy_glyco = 0.0f;
 	MPI_Reduce(&energy_glyco, &total_energy_glyco, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	if( prank == 0 ){
-		fprintf(stdout, "\n\t> (P%d) Total energy of G spring : %f ", prank, total_energy_glyco);
+		fprintf(stdout, "\n\t> (Master P) Total energy of G spring : %f \n", total_energy_glyco);
+		fflush(stdout);
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	double energy_pepti = compute_energy_pbond(cwl);
+	fprintf(stdout, "\n\t> (P%d) Energy P spring : %f ", prank, energy_pepti);
+	fflush(stdout);
+
+	double total_energy_pepti = 0.0f;
+	MPI_Reduce(&energy_pepti, &total_energy_pepti, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	if( prank == 0 ){
+		fprintf(stdout, "\n\t> (Master P) Total energy of P spring : %f \n", total_energy_pepti);
 		fflush(stdout);
 	}
 
@@ -75,7 +88,7 @@ int main(int argc, char *argv[]){
 	cio->write_PDB(cwl, prank);
 	delete cio;
 
-	MC_simulated_annealing(cwl, prank, nrank);
+	// MC_simulated_annealing(cwl, prank, nrank);
 
 	// for(int i=0; i<100; ++i)
 	// 	conjugate_gradient(cwl, prank, nrank);

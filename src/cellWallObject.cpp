@@ -298,7 +298,7 @@ void CellWallMonolayer::generate_geometry(){
   double alpha = 0.0f;
   double dalpha = (2.0f*PI) / double(_npgstrand);
 
-  dy = d0_p*1.01f; // this makes a spring at rest
+  dy = d0_p*3.0f; // this makes a spring at rest
 
   // shift pour les ghosts
   offset = 0;
@@ -311,7 +311,8 @@ void CellWallMonolayer::generate_geometry(){
 
     if( _mpi_rank != 0 ){
       MPI_Recv(&_y0, 1, MPI_DOUBLE, _mpi_rank-1, 52, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      _y0 += d0_p;
+      // _y0 += d0_p;
+      _y0 += dy;
     }
 
     if( _mpi_rank != _mpi_size -1 ){

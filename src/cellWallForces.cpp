@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 
+#include <mpi.h>
+
 /*
  * Compute the total energy of glycosidic springs according to
  * the equation of spring : e = 0.5 * k_g * (||r2-r1||-d_g)^2
@@ -139,9 +141,9 @@ double compute_energy_pbond(CellWallMonolayer *cwl){
     mi = cwl->pepti_bonds[i];
     mj = cwl->pepti_bonds[i+1];
 
-    x = cwl->coordinate_xyz[mj] - cwl->coordinate_xyz[mi];
-    y = cwl->coordinate_xyz[mj+1] - cwl->coordinate_xyz[mi+1];
-    z = cwl->coordinate_xyz[mj+2] - cwl->coordinate_xyz[mi+2];
+    x = cwl->coordinate_xyz[mi] - cwl->coordinate_xyz[mj];
+    y = cwl->coordinate_xyz[mi+1] - cwl->coordinate_xyz[mj+1];
+    z = cwl->coordinate_xyz[mi+2] - cwl->coordinate_xyz[mj+2];
 
     dij = sqrt(x*x + y*y + z*z);
 
