@@ -11,9 +11,9 @@
 #include "cellWallIO.h"
 #include "cellWallOptimization.h"
 
-#ifdef DEBUG
+// #ifdef DEBUG
 #include "cellWallDebug.h"
-#endif
+// #endif
 
 int main(int argc, char *argv[]){
 
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
-	nstrands = 12;
-	npgstrand = 8;
+	nstrands = 512;
+	npgstrand = 256;
 
 	if( nrank < 2 ){
 		cwl = new CellWallMonolayer(nstrands, npgstrand);
@@ -57,6 +57,11 @@ int main(int argc, char *argv[]){
 	cwl->generate_glycosidic_bonds();
 	cwl->generate_peptidic_bonds();
 
+	// if( prank == 0){
+	// 	display_glyco_bonds(cwl);
+	// 	display_glyco_glyco_angles(cwl);
+	// }
+
 	// benchmarks_energy_cw(cwl, prank, nrank);
 
 	double energy_glyco = compute_energy_gbond(cwl);
@@ -83,9 +88,20 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}
 
+	double energy_gg = compute_energy_gg_angles(cwl);
+	fprintf(stdout, "\n\t> (P%d) Energy G-G angles : %f ", prank, energy_gg);
+	fflush(stdout);
+
+	double total_energy_gg = 0.0f;
+	MPI_Reduce(&energy_gg, &total_energy_gg, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	if( prank == 0 ){
+		fprintf(stdout, "\n\t> (Master P) Total energy of G-G angles : %f \n", total_energy_gg);
+		fflush(stdout);
+	}
+
 	CellWallIOSystem *cio;
 	cio = new CellWallIOSystem("initial");
-	cio->write_PDB(cwl, prank);
+	// cio->write_PDB(cwl, prank);
 	delete cio;
 
 	// MC_simulated_annealing(cwl, prank, nrank);

@@ -68,12 +68,12 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
   double x_jk, y_jk , z_jk, norm_jk, norm_jk2;
   double gg_energy = 0.0f, pscal, theta, tmp;
 
-  for(i=0; i<cwl->get_total_gg_angles()*2; i+=2){
+  for(i=0; i<cwl->get_total_gg_angles()*3; i+=3){
 
-    // the two involved bonds
-    mi = cwl->glyco_bonds[cwl->gg_angles[i]*2];
-    mj = cwl->glyco_bonds[(cwl->gg_angles[i]*2)+1]; // middle mass #emoticon_lunette
-    mk = cwl->glyco_bonds[(cwl->gg_angles[i+1]*2)+1];
+    // involved masses
+    mi = cwl->gg_angles[i];
+    mj = cwl->gg_angles[i+1]; // middle mass #emoticon_lunette
+    mk = cwl->gg_angles[i+2];
 
     // mi, mj, mk are the index in the coordinate array of the "x" coordinate of the mass
     x_ij = cwl->coordinate_xyz[mi] - cwl->coordinate_xyz[mj];

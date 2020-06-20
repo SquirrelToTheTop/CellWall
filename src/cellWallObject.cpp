@@ -64,8 +64,8 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   fflush(stdout);
 
   // array of index of bonds for glycosidic-glycosidic angles
-  gg_angles = new int[_nglyco_glyco_angles * 2];
-  _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*2)) / (MBYTES);
+  gg_angles = new int[_nglyco_glyco_angles * 3];
+  _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*3)) / (MBYTES);
   fprintf(stdout, "\n\t> Allocation of glyco-glyco angles array");
   fflush(stdout);
 
@@ -132,8 +132,8 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand, int prank, int
   _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds*2)) / (MBYTES);
 
   // array of index of bonds for glycosidic-glycosidic angles
-  gg_angles = new int[_nglyco_glyco_angles * 2];
-  _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*2)) / (MBYTES);
+  gg_angles = new int[_nglyco_glyco_angles * 3];
+  _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*3)) / (MBYTES);
 
   if( _mpi_size > 1 ){
     fprintf(stdout, "\n\t> Allocation of CW array (P%d) !", _mpi_rank);
@@ -227,10 +227,10 @@ void CellWallMonolayer::cellwall_parameters(){
   // _cellwall_length = (nstrands-1) * d0_p + 2.0f * _cellwall_cap_radius;
   _cellwall_length = double(_nstrands-1) * d0_p;
 
-  // total number of glycosidic springs 
+  // total number of glycosidic springs and ghost bonds not considered for now
   _nglyco_bonds = _npgstrand * _nstrands;
 
-  // there is as much glyco-glyco angles as glycosidic bond
+  // there is as much glyco-glyco angles as glycosidic bond and ghost anlges are not considered
   _nglyco_glyco_angles = _nglyco_bonds;
 
   _npepti_bonds = (_nstrands-1) * int(_npgstrand/2) + _nghost_npepti_bonds;
@@ -418,6 +418,7 @@ void CellWallMonolayer::generate_geometry(){
 void CellWallMonolayer::generate_glycosidic_bonds(){
 
   int i, j, mi, mj, ai, bi;
+  int offset;
 
   fprintf(stdout, "\t> Generate cell wall glycosidic springs ... ");
   fflush(stdout);
@@ -433,49 +434,77 @@ void CellWallMonolayer::generate_glycosidic_bonds(){
   }
 
   bi = 0;
-  ai = 0;
   for(i=0; i<_nstrands; ++i){
     
     for(j=0; j<_npgstrand-1; ++j){
       glyco_bonds[bi] = mi;
       glyco_bonds[bi+1] = mj;
 
-      gg_angles[ai] = int(mi/3);
-      gg_angles[ai+1] = int(mj/3);
-
       mi += DIM;
       mj += DIM;
       bi += 2;
-      ai += 2;
+
     }
 
     // link last mass of strand and first of strand (circle)
     glyco_bonds[bi] = mj - DIM;
     glyco_bonds[bi+1] = mi - (_npgstrand-1)*DIM;
-    bi += 2;
 
-    gg_angles[ai] = int((mj-DIM)/3);
-    gg_angles[ai+1] = int((mi - (_npgstrand-1)*DIM)/3);
-    ai += 2;
+    bi += 2;
 
     // next strands
     mi += DIM;
     mj += DIM;
   }
 
+  // Pi angle between tree aligned pg masses
+  ai = 0;
+  if( _mpi_size > 1 && _mpi_rank > 0 ){
+    mi = _nghost_strands*_npgstrand*DIM;
+  }else{
+    mi = 0;
+  }
+
+  offset = _npgstrand*DIM;
+
+  for(i=0; i<_nstrands; ++i){
+
+    //first angles on first mass of strand
+    gg_angles[ai] =  mi + offset - DIM;
+    gg_angles[ai+1] = mi; // attached here, angle here
+    gg_angles[ai+2] = mi+DIM;
+    ai += 3;
+    mi += DIM;
+
+    for(j=1; j<_npgstrand-1; ++j){
+      gg_angles[ai] =  mi - DIM;
+      gg_angles[ai+1] = mi; // attached here, angle here
+      gg_angles[ai+2] = mi+DIM;
+      ai += 3;
+      mi += DIM;
+    }
+
+    gg_angles[ai] =  mi - DIM;
+    gg_angles[ai+1] = mi; // attached here, angle here
+    gg_angles[ai+2] = mi - offset + DIM;
+    ai += 3;
+    mi += DIM;
+
+  }
+
   if( int(bi/2) != _nglyco_bonds ){
     fprintf(stderr, "\n\t> Error: number of glycosidc bonds created != theorical number of bonds !");
     fflush(stdout);
   }else{
-    if( int(ai)/2 != _nglyco_glyco_angles ){
+    if( int(ai)/3 != _nglyco_glyco_angles ){
       fprintf(stderr, "\n\n\t> Error: number of g-g angles created != theorical number of g-g angles !\n");
-      fprintf(stderr, "\t> %d vs %d\n", int(ai)/2, _nglyco_glyco_angles );
+      fprintf(stderr, "\t> %d vs %d\n", int(ai)/3, _nglyco_glyco_angles );
       fflush(stdout);
     }else{
       fprintf(stdout, " SUCCESS \n");
       fflush(stdout);
     }
-  }  
+  }
 
 }
 

@@ -25,7 +25,6 @@ void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
 
   double energy_glyco, energy_pepti;
 	double energy_glyco_glyco;
-  double total_energy;
 
 	clock_t start, end;
 	double cpu_time_used[3];
@@ -45,7 +44,7 @@ void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
 		cpu_time_used[0] += ((double) (end - start)) / CLOCKS_PER_SEC;
 
 		start = clock();
-		// energy_glyco_glyco = compute_energy_gg_angles(cwl);
+		energy_glyco_glyco = compute_energy_gg_angles(cwl);
 		end = clock();
 		cpu_time_used[1] += ((double) (end - start)) / CLOCKS_PER_SEC;
 
@@ -55,8 +54,6 @@ void benchmarks_energy_cw(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
 		energy_pepti = compute_energy_pbond(cwl);
 		end = clock();
 		cpu_time_used[2] += ((double) (end - start)) / CLOCKS_PER_SEC;
-
-    total_energy = energy_glyco + energy_glyco_glyco + energy_pepti;
 
 	}
 
@@ -500,7 +497,7 @@ void conjugate_gradient(CellWallMonolayer *cwl, int mpi_rank, int mpi_size){
 	
 	int i, k;
 	double cw_energy;;
-	double cw_gbond, cw_pepti, cw_gg_angles;
+	double cw_gbond, cw_pepti;
 
 	double beta_k = 0.001f;
 	double alpha_k = 0.001f;
