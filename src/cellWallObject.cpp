@@ -69,6 +69,12 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand){
   fprintf(stdout, "\n\t> Allocation of glyco-glyco angles array");
   fflush(stdout);
 
+  // array of index of bonds for glycosidic-glycosidic angles
+  gp_angles = new int[_nglyco_pepti_angles * 3];
+  _memory_consumption += (sizeof(gp_angles[0])*(_nglyco_pepti_angles*3)) / (MBYTES);
+  fprintf(stdout, "\n\t> Allocation of glyco-pepti angles array");
+  fflush(stdout);
+
   fprintf(stdout, "\n\t> Memory consumption : %f MBytes \n", _memory_consumption);
   fflush(stdout);
 
@@ -131,9 +137,13 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand, int prank, int
   pepti_bonds = new int[_npepti_bonds * 2];
   _memory_consumption += (sizeof(pepti_bonds[0])*(_npepti_bonds*2)) / (MBYTES);
 
-  // array of index of bonds for glycosidic-glycosidic angles
+  // array of index of masses for glycosidic-glycosidic angles
   gg_angles = new int[_nglyco_glyco_angles * 3];
   _memory_consumption += (sizeof(gg_angles[0])*(_nglyco_glyco_angles*3)) / (MBYTES);
+
+  // array of index of bonds for glycosidic-glycosidic angles
+  gp_angles = new int[_nglyco_pepti_angles * 3];
+  _memory_consumption += (sizeof(gp_angles[0])*(_nglyco_pepti_angles*3)) / (MBYTES);
 
   if( _mpi_size > 1 ){
     fprintf(stdout, "\n\t> Allocation of CW array (P%d) !", _mpi_rank);
@@ -151,6 +161,9 @@ CellWallMonolayer::CellWallMonolayer(int nstrands, int npgstrand, int prank, int
  *
  */
 CellWallMonolayer::~CellWallMonolayer(){
+
+  if( gp_angles )
+    delete [] gp_angles;
 
   if( gg_angles )
     delete [] gg_angles;
@@ -201,6 +214,7 @@ void CellWallMonolayer::clean_forces(){
  * _nglyco_bonds : nombre de ressort de type glycosidic
  * _nglyco_glyco_angles : nombre d'angle type 'PI' entre deux liasisons glyco (meme strand)
  * _npepti_bonds : nombre de ressort de type peptidic
+ * _nglyco_pepti_angles : nombre d'angle de type 'PI/2' entre une liaison glyco et une pepti
  * 
  */
 void CellWallMonolayer::cellwall_parameters(){
@@ -235,6 +249,9 @@ void CellWallMonolayer::cellwall_parameters(){
 
   _npepti_bonds = (_nstrands-1) * int(_npgstrand/2) + _nghost_npepti_bonds;
 
+  // 4 angles for each peptidic spring
+  _nglyco_pepti_angles = 4 * _npepti_bonds;
+
 }
 
 /*
@@ -258,7 +275,8 @@ void CellWallMonolayer::simulation_infos(){
 
   fprintf(stdout, "\n\t\t> Total number of G-springs: %d", _nglyco_bonds);
   fprintf(stdout, "\n\t\t> Total number of G-G angles: %d", _nglyco_glyco_angles);
-  fprintf(stdout, "\n\t\t> Total number of P-springs: %d\n", _npepti_bonds);
+  fprintf(stdout, "\n\t\t> Total number of P-springs: %d", _npepti_bonds);
+  fprintf(stdout, "\n\t\t> Total number of G-P angles: %d\n", _nglyco_pepti_angles);
 
   if( _mpi_size > 1 ){
     fprintf(stdout, "\n\t\t> Number of ghost G-springs  (P%d): %d", _mpi_rank, _nghost_nglyco_bonds);
@@ -298,7 +316,7 @@ void CellWallMonolayer::generate_geometry(){
   double alpha = 0.0f;
   double dalpha = (2.0f*PI) / double(_npgstrand);
 
-  dy = d0_p*3.0f; // this makes a spring at rest
+  dy = d0_p*1.01f; // this makes a spring at rest
 
   // shift pour les ghosts
   offset = 0;
@@ -526,18 +544,20 @@ void CellWallMonolayer::generate_glycosidic_bonds(){
  */   
 void CellWallMonolayer::generate_peptidic_bonds(){
 
-  int i, j, mi, mj, bi;
+  int i, j, mi, mj, ai, bi;
+  int offset, laststrand_pg;
 
   fprintf(stdout, "\t> Generate cell wall peptidic springs ... ");
   fflush(stdout);
 
-  // peptidic bonds
-
   // start @ DIM and +DIM, for the condition if( i%2 == 1 )
   mi=DIM;
   mj=(_npgstrand*DIM)+DIM;
+  offset = _npgstrand*DIM;
+  laststrand_pg = offset-DIM;
 
   bi=0;
+  ai=0;
   // take into account ghost pg
   for(i=0; i<(_nstrands+_nghost_strands)-1; ++i){
 
@@ -561,20 +581,112 @@ void CellWallMonolayer::generate_peptidic_bonds(){
       pepti_bonds[bi] = mi;
       pepti_bonds[bi+1] = mj;
 
+      if( (mi%(_npgstrand*DIM)) == 0 ){
+
+        gp_angles[ai] = mi+offset-DIM;
+        gp_angles[ai+1] = mi; // angle here
+        gp_angles[ai+2] = mj;
+        ai += 3;
+
+        gp_angles[ai] = mi+DIM;
+        gp_angles[ai+1] = mi; // angle here
+        gp_angles[ai+2] = mj;
+        ai += 3;
+
+        gp_angles[ai] = mj+offset-DIM;
+        gp_angles[ai+1] = mj; // angle here
+        gp_angles[ai+2] = mi;
+        ai += 3;
+
+        gp_angles[ai] = mj+DIM;
+        gp_angles[ai+1] = mj; // angle here
+        gp_angles[ai+2] = mi;
+        ai += 3;
+
+      }else{
+
+        if( mi == laststrand_pg ){
+
+          gp_angles[ai] = mi-DIM;
+          gp_angles[ai+1] = mi; // angle here
+          gp_angles[ai+2] = mj;
+          ai += 3;
+
+          gp_angles[ai] = mi-offset+DIM;
+          gp_angles[ai+1] = mi; // angle here
+          gp_angles[ai+2] = mj;
+          ai += 3;
+
+          gp_angles[ai] = mj-DIM;
+          gp_angles[ai+1] = mj; // angle here
+          gp_angles[ai+2] = mi;
+          ai += 3;
+
+          gp_angles[ai] = mj-offset+DIM;
+          gp_angles[ai+1] = mj; // angle here
+          gp_angles[ai+2] = mi;
+          ai += 3;
+
+        }else{
+
+          gp_angles[ai] = mi-DIM;
+          gp_angles[ai+1] = mi; // angle here
+          gp_angles[ai+2] = mj;
+          ai += 3;
+
+          gp_angles[ai] = mi+DIM;
+          gp_angles[ai+1] = mi; // angle here
+          gp_angles[ai+2] = mj;
+          ai += 3;
+
+          gp_angles[ai] = mj-DIM;
+          gp_angles[ai+1] = mj; // angle here
+          gp_angles[ai+2] = mi;
+          ai += 3;
+
+          gp_angles[ai] = mj+DIM;
+          gp_angles[ai+1] = mj; // angle here
+          gp_angles[ai+2] = mi;
+          ai += 3;
+
+        }
+
+      }
+
       mi += 2*DIM;
       mj += 2*DIM;
 
       bi += 2;
+
     }
 
+    laststrand_pg += offset;
+
+  }
+
+  // peptidic bonds
+  // we skip ghost pg and do not take into account glyco spring
+  // since its taken into account on _mpi_rank-1 process
+  if( _mpi_size > 1 && _mpi_rank > 0 ){
+    mi = _npgstrand*DIM;
+    mj = mi+DIM;
+  }else{
+    mi = 0;
+    mj = DIM;
   }
 
   if( int(bi/2) != _npepti_bonds ){
     fprintf(stderr, "\n\n\t> Error: N peptidic bonds created (%d) != theorical N %d !", int(bi/2), _npepti_bonds);
     fflush(stdout);
   }else{
-    fprintf(stdout, " SUCCESS \n");
-    fflush(stdout);
+    if( int(ai)/3 != _nglyco_pepti_angles ){
+      fprintf(stderr, "\n\n\t> Error: number of g-p angles created != theorical number of g-p angles !\n");
+      fprintf(stderr, "\t> %d vs %d\n", int(ai)/3, _nglyco_pepti_angles );
+      fflush(stdout);
+    }else{
+      fprintf(stdout, " SUCCESS \n");
+      fflush(stdout);
+    }
   }  
 
 }
@@ -607,6 +719,10 @@ int CellWallMonolayer::get_total_glycobonds(){
 
 int CellWallMonolayer::get_total_gg_angles(){
   return _nglyco_glyco_angles;
+}
+
+int CellWallMonolayer::get_total_gp_angles(){
+  return _nglyco_pepti_angles;
 }
 
 int CellWallMonolayer::get_total_peptibonds(){

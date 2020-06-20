@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
-	nstrands = 512;
+	nstrands = 128;
 	npgstrand = 256;
 
 	if( nrank < 2 ){
@@ -99,12 +99,23 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}
 
+	double energy_gp = compute_energy_gp_angles(cwl);
+	fprintf(stdout, "\n\t> (P%d) Energy G-P angles : %f ", prank, energy_gp);
+	fflush(stdout);
+
+	double total_energy_gp = 0.0f;
+	MPI_Reduce(&energy_gp, &total_energy_gp, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+	if( prank == 0 ){
+		fprintf(stdout, "\n\t> (Master P) Total energy of G-P angles : %f \n", total_energy_gp);
+		fflush(stdout);
+	}
+
 	CellWallIOSystem *cio;
 	cio = new CellWallIOSystem("initial");
-	// cio->write_PDB(cwl, prank);
+	cio->write_PDB(cwl, prank);
 	delete cio;
 
-	// MC_simulated_annealing(cwl, prank, nrank);
+	MC_simulated_annealing(cwl, prank, nrank);
 
 	// for(int i=0; i<100; ++i)
 	// 	conjugate_gradient(cwl, prank, nrank);

@@ -17,6 +17,9 @@ double compute_energy_lbond(CellWallLipidLayer *ll);
 /* Compute energy of bending for glycosidic - glycosidic */
 double compute_energy_gg_angles(CellWallMonolayer *cwl);
 
+/* Compute energy of bending for glycosidic - peptidic */
+double compute_energy_gp_angles(CellWallMonolayer *cwl);
+
 /* Compute energy of bending for lipid - lipid */
 double compute_energy_ll_angles(CellWallLipidLayer *ll);
 

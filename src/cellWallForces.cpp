@@ -58,7 +58,7 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
  * (euclidian norme used)
  * 
  * Parameters:
- *             cellwall object, use coordinate array and glycosidic bonds
+ *             cellwall object, use coordinate array
  * 
  */
 double compute_energy_gg_angles(CellWallMonolayer *cwl){
@@ -115,6 +115,72 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
   gg_energy = gg_energy * 0.5f * stiffness_gg;
 
   return gg_energy;
+
+}
+
+/*
+ * Compute the total energy of glycosidic - peptidic angles according to
+ * the equation  : e = 0.5 * k_pg * (Theta - Theta_0)^2
+ * (euclidian norme used)
+ * 
+ * Parameters:
+ *             cellwall object, use coordinate array
+ * 
+ */
+double compute_energy_gp_angles(CellWallMonolayer *cwl){
+  
+  int i, mi, mj, mk;
+  double x_ij, y_ij , z_ij, norm_ij, norm_ij2;
+  double x_jk, y_jk , z_jk, norm_jk, norm_jk2;
+  double gp_energy = 0.0f, pscal, theta, tmp;
+
+  for(i=0; i<cwl->get_total_gp_angles()*3; i+=3){
+
+    // involved masses
+    mi = cwl->gp_angles[i];
+    mj = cwl->gp_angles[i+1]; // middle mass #emoticon_lunette
+    mk = cwl->gp_angles[i+2];
+
+    // mi, mj, mk are the index in the coordinate array of the "x" coordinate of the mass
+    x_ij = cwl->coordinate_xyz[mi] - cwl->coordinate_xyz[mj];
+    y_ij = cwl->coordinate_xyz[mi+1] - cwl->coordinate_xyz[mj+1];
+    z_ij = cwl->coordinate_xyz[mi+2] - cwl->coordinate_xyz[mj+2];
+
+    x_jk = cwl->coordinate_xyz[mk] - cwl->coordinate_xyz[mj];
+    y_jk = cwl->coordinate_xyz[mk+1] - cwl->coordinate_xyz[mj+1];
+    z_jk = cwl->coordinate_xyz[mk+2] - cwl->coordinate_xyz[mj+2];
+
+    norm_ij = sqrt(x_ij*x_ij + y_ij*y_ij + z_ij*z_ij);
+    norm_jk = sqrt(x_jk*x_jk + y_jk*y_jk + z_jk*z_jk);
+
+    norm_ij2 = norm_ij * norm_ij;
+    norm_jk2 = norm_jk * norm_jk;
+
+    // cos_theta = (mimj . mjmk)/||mimj||*||mjmk||
+    pscal = x_ij*x_jk + y_ij*y_jk + z_ij*z_jk;
+    theta = acos( pscal/(norm_ij*norm_jk) );
+
+    tmp = norm_ij*norm_jk;
+
+    cwl->forces_xyz[mi]   += stiffness_pg * (x_jk/tmp + x_ij/norm_ij2);
+    cwl->forces_xyz[mi+1] += stiffness_pg * (y_jk/tmp + y_ij/norm_ij2);
+    cwl->forces_xyz[mi+2] += stiffness_pg * (z_jk/tmp + z_ij/norm_ij2);
+
+    cwl->forces_xyz[mj]   += stiffness_pg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
+    cwl->forces_xyz[mj+1] += stiffness_pg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
+    cwl->forces_xyz[mj+2] += stiffness_pg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
+
+    cwl->forces_xyz[mk]   += stiffness_pg * (x_ij/tmp + x_jk/norm_ij2);
+    cwl->forces_xyz[mk+1] += stiffness_pg * (y_ij/tmp + y_jk/norm_ij2);
+    cwl->forces_xyz[mk+2] += stiffness_pg * (z_ij/tmp + z_jk/norm_ij2);
+
+    gp_energy += (theta-alpha0_pg)*(theta-alpha0_pg);
+    
+  }
+
+  gp_energy = gp_energy * 0.5f * stiffness_pg;
+
+  return gp_energy;
 
 }
 
