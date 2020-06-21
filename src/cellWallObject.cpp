@@ -569,8 +569,16 @@ void CellWallMonolayer::generate_peptidic_bonds(){
       mi += DIM;
       mj += DIM;
     }else{
-      mi -= DIM;
-      mj -= DIM;
+
+      // permet de gerer le bon alignement des ressorts sur les ghosts au debut
+      if( i == 0 && (_mpi_rank+1)%2 == 0 ){
+        mi += DIM;
+        mj += DIM;
+      }else{
+        mi -= DIM;
+        mj -= DIM;
+      }
+
     }
   
     for(j=mi; j<((i+1)*_npgstrand)*DIM; j+=(2*DIM)){
