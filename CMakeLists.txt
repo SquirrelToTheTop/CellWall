@@ -44,6 +44,8 @@ endif(${MPI_FOUND})
 
 find_package(OpenMP)
 
+message("OpenMP flags : " ${OpenMP_CXX_FLAGS})
+
 include_directories(${MPI_CXX_INCLUDE_DIRS})
 
 # config file
@@ -53,7 +55,7 @@ configure_file(${CellWall_h_dir}/cellWallConfig.h.in ${CellWall_h_dir}/cellWallC
 add_library(${PROJECT_NAME}_obj SHARED ${PROJECT_SOURCE_DIR}/src/cellWallUtils.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallIO.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallForces.cpp
-                                       ${PROJECT_SOURCE_DIR}/src/cellWallObject.cpp
+                                       ${PROJECT_SOURCE_DIR}/src/cellWallMonolayer.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallLipidLayer.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallOptimization.cpp
                                        ${PROJECT_SOURCE_DIR}/src/cellWallDebug.cpp

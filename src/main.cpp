@@ -2,10 +2,11 @@
 #include <stdlib.h>
 
 #include <mpi.h>
+#include <omp.h>
 
 #include "cellWallUtils.h"
 #include "cellWallConfig.h"
-#include "cellWallObject.h"
+#include "cellWallMonolayer.h"
 #include "cellWallLipidLayer.h"
 #include "cellWallForces.h"
 #include "cellWallIO.h"
@@ -18,16 +19,27 @@
 int main(int argc, char *argv[]){
 
 	int prank, nrank;
-	int nstrands, npgstrand;
+	int nstrands, npgstrand, npgdim;
 
 	CellWallMonolayer *cwl;
+	double *forces_xyz;
+
+	prank = 0;
+	nrank = 1;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 	MPI_Comm_rank(MPI_COMM_WORLD, &prank);
 
+	omp_set_num_threads(1);
+	omp_set_affinity_format("C");
+
 	nstrands = 64;
-	npgstrand = 64;
+	npgstrand = 32;
+
+	if( prank == 0 ){
+		welcome_message();
+	}
 
 	if( nrank < 2 ){
 		cwl = new CellWallMonolayer(nstrands, npgstrand);
@@ -37,13 +49,6 @@ int main(int argc, char *argv[]){
 		if( nstrands%nrank != 0 ){
 			fprintf(stdout, "\n\t> Load balance != per process");
 			fflush(stdout);
-		}
-
-		if( prank == 0 ){
-			welcome_message();
-			fprintf(stdout, "\n> Number of MPI process involved : %d", nrank);
-			fprintf(stdout,"\n\t> Number of strands : %d", nstrands);
-			fprintf(stdout,"\n\t> Number of PG strands : %d\n", npgstrand);
 		}
 
 		cwl = new CellWallMonolayer(nstrand_per_proc, npgstrand, prank, nrank);
@@ -56,6 +61,14 @@ int main(int argc, char *argv[]){
 	cwl->generate_geometry();
 	cwl->generate_glycosidic_bonds();
 	cwl->generate_peptidic_bonds();
+	cwl->generate_mesh();
+
+	npgdim = cwl->get_total_npg()*DIM;
+	forces_xyz = (double *) malloc(sizeof(double)*npgdim);
+	for(int i=0; i<npgdim; ++i)
+		forces_xyz[i] = 0.0f;
+
+	// display_cw_mesh(cwl);
 
 	// if( prank == 0){
 	// 	display_glyco_bonds(cwl);
@@ -64,7 +77,7 @@ int main(int argc, char *argv[]){
 
 	// benchmarks_energy_cw(cwl, prank, nrank);
 
-	double energy_glyco = compute_energy_gbond(cwl);
+	double energy_glyco = compute_energy_gbond(cwl, &forces_xyz[0]);
 	fprintf(stdout, "\n\t> (P%d) Energy G spring : %f ", prank, energy_glyco);
 	fflush(stdout);
 
@@ -77,7 +90,7 @@ int main(int argc, char *argv[]){
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	double energy_pepti = compute_energy_pbond(cwl);
+	double energy_pepti = compute_energy_pbond(cwl, &forces_xyz[0]);
 	fprintf(stdout, "\n\t> (P%d) Energy P spring : %f ", prank, energy_pepti);
 	fflush(stdout);
 
@@ -88,7 +101,7 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}
 
-	double energy_gg = compute_energy_gg_angles(cwl);
+	double energy_gg = compute_energy_gg_angles(cwl, &forces_xyz[0]);
 	fprintf(stdout, "\n\t> (P%d) Energy G-G angles : %f ", prank, energy_gg);
 	fflush(stdout);
 
@@ -99,7 +112,7 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}
 
-	double energy_gp = compute_energy_gp_angles(cwl);
+	double energy_gp = compute_energy_gp_angles(cwl, &forces_xyz[0]);
 	fprintf(stdout, "\n\t> (P%d) Energy G-P angles : %f ", prank, energy_gp);
 	fflush(stdout);
 
@@ -113,16 +126,17 @@ int main(int argc, char *argv[]){
 	CellWallIOSystem *cio;
 	cio = new CellWallIOSystem("initial");
 	cio->write_PDB(cwl, prank);
+	cio->write_coordinate_ascii(cwl);
 	delete cio;
 
 	// MC_simulated_annealing(cwl, prank, nrank);
 
 	// for(int i=0; i<100; ++i)
-	// 	conjugate_gradient(cwl, prank, nrank);
+	conjugate_gradient(cwl, prank, nrank);
 
-	// cio = new CellWallIOSystem("post_CG");
-	// cio->write_PDB(cwl, prank);
-	// delete cio;
+	cio = new CellWallIOSystem("post_CG_0");
+	cio->write_PDB(cwl, prank);
+	delete cio;
 
 	// llayer->simulation_infos();
 	// llayer->generate_geometry();
@@ -142,10 +156,11 @@ int main(int argc, char *argv[]){
 	// optimize_simulated_annealing(cwl, llayer, 10000);
 	// optimize_simulated_annealing_force(cwl, llayer, 1);
 
+	free(forces_xyz);
+
 	// delete llayer;
 	delete cwl;
 	
-
 	MPI_Finalize();
 
 	return EXIT_SUCCESS;

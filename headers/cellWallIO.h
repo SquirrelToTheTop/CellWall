@@ -13,7 +13,7 @@
 
 #include <mpi.h>
 
-#include "cellWallObject.h"
+#include "cellWallMonolayer.h"
 #include "cellWallLipidLayer.h"
 
 /*
@@ -32,6 +32,8 @@ class CellWallIOSystem{
     void write_PDB(CellWallMonolayer *, int);
     void write_PDB(CellWallLipidLayer *, int);
 
+    int add_data_file(std::string);
+
   private:
 
     const std::string pdb_ext=".pdb";
@@ -42,9 +44,12 @@ class CellWallIOSystem{
     std::string _filename;
 
     int _nwrite = 0;
+    int _buffer_size_ko = 4; // en Koctets
 
     int _mpi_rank = 0; // rang MPI
     int _mpi_size = 1; // total number of process
+
+    bool activate_io = true; // fast activation or desactivation of IO
 
     void open_file(std::string filename);
     void close_file(std::string filename);

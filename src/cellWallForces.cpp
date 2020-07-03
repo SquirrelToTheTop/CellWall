@@ -16,12 +16,13 @@
  *             cellwall object, use coordinate array and glycosidic bonds
  * 
  */
-double compute_energy_gbond(CellWallMonolayer *cwl){
+double compute_energy_gbond(CellWallMonolayer *cwl, double *forces_xyz){
   
   int i, mi, mj;
   double dij, x, y , z, tmp;
   double g_energy = 0.0f;
 
+  // #pragma omp parallel for ordered private(mi, mj, x, y, z, tmp, dij) reduction(+:g_energy)
   for(i=0; i<cwl->get_total_glycobonds()*2; i+=2){
     mi = cwl->glyco_bonds[i];
     mj = cwl->glyco_bonds[i+1];
@@ -35,13 +36,13 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
     tmp = stiffness_g * (dij - d0_g) / dij;
     dij = dij - d0_g;
 
-    cwl->forces_xyz[mi] += tmp * x;
-    cwl->forces_xyz[mi+1] += tmp * y;
-    cwl->forces_xyz[mi+2] += tmp * z;
+    forces_xyz[mi] += tmp * x;
+    forces_xyz[mi+1] += tmp * y;
+    forces_xyz[mi+2] += tmp * z;
 
-    cwl->forces_xyz[mj] -= tmp * x;
-    cwl->forces_xyz[mj+1] -= tmp * y;
-    cwl->forces_xyz[mj+2] -= tmp * z;
+    forces_xyz[mj] -= tmp * x;
+    forces_xyz[mj+1] -= tmp * y;
+    forces_xyz[mj+2] -= tmp * z;
 
     g_energy += dij * dij;
   }
@@ -61,7 +62,7 @@ double compute_energy_gbond(CellWallMonolayer *cwl){
  *             cellwall object, use coordinate array
  * 
  */
-double compute_energy_gg_angles(CellWallMonolayer *cwl){
+double compute_energy_gg_angles(CellWallMonolayer *cwl, double *forces_xyz){
   
   int i, mi, mj, mk;
   double x_ij, y_ij , z_ij, norm_ij, norm_ij2;
@@ -96,17 +97,17 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
 
     tmp = norm_ij*norm_jk;
 
-    cwl->forces_xyz[mi]   += stiffness_gg * (x_jk/tmp + x_ij/norm_ij2);
-    cwl->forces_xyz[mi+1] += stiffness_gg * (y_jk/tmp + y_ij/norm_ij2);
-    cwl->forces_xyz[mi+2] += stiffness_gg * (z_jk/tmp + z_ij/norm_ij2);
+    forces_xyz[mi]   += stiffness_gg * (x_jk/tmp + x_ij/norm_ij2);
+    forces_xyz[mi+1] += stiffness_gg * (y_jk/tmp + y_ij/norm_ij2);
+    forces_xyz[mi+2] += stiffness_gg * (z_jk/tmp + z_ij/norm_ij2);
 
-    cwl->forces_xyz[mj]   += stiffness_gg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
-    cwl->forces_xyz[mj+1] += stiffness_gg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
-    cwl->forces_xyz[mj+2] += stiffness_gg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
+    forces_xyz[mj]   += stiffness_gg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
+    forces_xyz[mj+1] += stiffness_gg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
+    forces_xyz[mj+2] += stiffness_gg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
 
-    cwl->forces_xyz[mk]   += stiffness_gg * (x_ij/tmp + x_jk/norm_ij2);
-    cwl->forces_xyz[mk+1] += stiffness_gg * (y_ij/tmp + y_jk/norm_ij2);
-    cwl->forces_xyz[mk+2] += stiffness_gg * (z_ij/tmp + z_jk/norm_ij2);
+    forces_xyz[mk]   += stiffness_gg * (x_ij/tmp + x_jk/norm_ij2);
+    forces_xyz[mk+1] += stiffness_gg * (y_ij/tmp + y_jk/norm_ij2);
+    forces_xyz[mk+2] += stiffness_gg * (z_ij/tmp + z_jk/norm_ij2);
 
     gg_energy += (theta-alpha0_gg)*(theta-alpha0_gg);
     
@@ -127,7 +128,7 @@ double compute_energy_gg_angles(CellWallMonolayer *cwl){
  *             cellwall object, use coordinate array
  * 
  */
-double compute_energy_gp_angles(CellWallMonolayer *cwl){
+double compute_energy_gp_angles(CellWallMonolayer *cwl, double *forces_xyz){
   
   int i, mi, mj, mk;
   double x_ij, y_ij , z_ij, norm_ij, norm_ij2;
@@ -159,20 +160,21 @@ double compute_energy_gp_angles(CellWallMonolayer *cwl){
     // cos_theta = (mimj . mjmk)/||mimj||*||mjmk||
     pscal = x_ij*x_jk + y_ij*y_jk + z_ij*z_jk;
     theta = acos( pscal/(norm_ij*norm_jk) );
+    // fprintf(stdout,"\n\t %f ",theta);
 
     tmp = norm_ij*norm_jk;
 
-    cwl->forces_xyz[mi]   += stiffness_pg * (x_jk/tmp + x_ij/norm_ij2);
-    cwl->forces_xyz[mi+1] += stiffness_pg * (y_jk/tmp + y_ij/norm_ij2);
-    cwl->forces_xyz[mi+2] += stiffness_pg * (z_jk/tmp + z_ij/norm_ij2);
+    forces_xyz[mi]   += stiffness_pg * (x_jk/tmp + x_ij/norm_ij2);
+    forces_xyz[mi+1] += stiffness_pg * (y_jk/tmp + y_ij/norm_ij2);
+    forces_xyz[mi+2] += stiffness_pg * (z_jk/tmp + z_ij/norm_ij2);
 
-    cwl->forces_xyz[mj]   += stiffness_pg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
-    cwl->forces_xyz[mj+1] += stiffness_pg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
-    cwl->forces_xyz[mj+2] += stiffness_pg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
+    forces_xyz[mj]   += stiffness_pg * ( ( (x_ij+x_jk) / tmp ) + x_ij/norm_ij2 + x_jk/norm_jk2);
+    forces_xyz[mj+1] += stiffness_pg * ( ( (y_ij+y_jk) / tmp ) + y_ij/norm_ij2 + y_jk/norm_jk2);
+    forces_xyz[mj+2] += stiffness_pg * ( ( (z_ij+z_jk) / tmp ) + z_ij/norm_ij2 + z_jk/norm_jk2);
 
-    cwl->forces_xyz[mk]   += stiffness_pg * (x_ij/tmp + x_jk/norm_ij2);
-    cwl->forces_xyz[mk+1] += stiffness_pg * (y_ij/tmp + y_jk/norm_ij2);
-    cwl->forces_xyz[mk+2] += stiffness_pg * (z_ij/tmp + z_jk/norm_ij2);
+    forces_xyz[mk]   += stiffness_pg * (x_ij/tmp + x_jk/norm_ij2);
+    forces_xyz[mk+1] += stiffness_pg * (y_ij/tmp + y_jk/norm_ij2);
+    forces_xyz[mk+2] += stiffness_pg * (z_ij/tmp + z_jk/norm_ij2);
 
     gp_energy += (theta-alpha0_pg)*(theta-alpha0_pg);
     
@@ -197,7 +199,7 @@ double compute_energy_gp_angles(CellWallMonolayer *cwl){
  *             cellwall object, use coordinate array and peptidic bonds
  * 
  */
-double compute_energy_pbond(CellWallMonolayer *cwl){
+double compute_energy_pbond(CellWallMonolayer *cwl, double *forces_xyz){
   
   int i, mi, mj;
   double dij, x, y , z, tmp;
@@ -216,13 +218,13 @@ double compute_energy_pbond(CellWallMonolayer *cwl){
     tmp = stiffness_g * (dij - d0_p) / dij;
     dij = dij - d0_p;
 
-    cwl->forces_xyz[mi] += tmp * x;
-    cwl->forces_xyz[mi+1] += tmp * y;
-    cwl->forces_xyz[mi+2] += tmp * z;
+    forces_xyz[mi] += tmp * x;
+    forces_xyz[mi+1] += tmp * y;
+    forces_xyz[mi+2] += tmp * z;
 
-    cwl->forces_xyz[mj] -= tmp * x;
-    cwl->forces_xyz[mj+1] -= tmp * y;
-    cwl->forces_xyz[mj+2] -= tmp * z;
+    forces_xyz[mj] -= tmp * x;
+    forces_xyz[mj+1] -= tmp * y;
+    forces_xyz[mj+2] -= tmp * z;
 
     p_energy += dij * dij;
   }
@@ -483,6 +485,140 @@ double compute_energy_pressure(CellWallLipidLayer *ll){
 }
 
 /*
+ * Compute the total energy due to the turgor pressure according to
+ * the equation  : e = P . V
+ * 
+ * Volume computed based on center of a strand (coordinate computed
+ * with least square method which equals to a mean) and tree 
+ * tetrahedrons for each mesh element (2 triangles)
+ * 
+ * Parameters:
+ *             lipid layer object, use coordinate array and lipid
+ *             ll_angles
+ * 
+ */
+double compute_energy_pressure(CellWallMonolayer *cwl){
+  
+  int i, j, ci, mi;
+  int ns, npgs, meshi, nmesh_strand;
+  int a, b, c, d;
+  double tmp_oa[DIM], tmp_oc[DIM], tmp_ob[DIM], tmp_od[DIM];
+
+  ns = cwl->get_number_of_strands();
+  npgs = cwl->get_number_of_pg_strand() + cwl->get_number_of_ghost_strand();
+  nmesh_strand = npgs;
+
+  double centers[ns*DIM];
+  double total_v, v1, v2, v3;
+
+  total_v = 0.0f;
+
+  // compute centers of pg strands least square method
+  ci = 0;
+  mi = 0;
+  for(i=0; i<ns; ++i){
+
+    centers[ci]= 0.0f;
+    centers[ci+1]= 0.0f;
+    centers[ci+2]= 0.0f;
+    
+    for(j=0; j<npgs; ++j){
+      centers[ci] += cwl->coordinate_xyz[mi];
+      centers[ci+1] += cwl->coordinate_xyz[mi+1];
+      centers[ci+2] += cwl->coordinate_xyz[mi+2];
+      mi += DIM;
+    }
+
+    centers[ci] /= npgs;
+    centers[ci+1] /= npgs;
+    centers[ci+2] /= npgs;
+
+    // fprintf(stdout, "\n> Center #%d @ (%f,%f,%f)", i, centers[ci], centers[ci+1], centers[ci+2]);
+    // fflush(stdout);
+    ci += DIM;
+  }
+
+  ci = 0;
+  meshi = 0;
+  for(i=0; i<ns-1; ++i){
+
+    // same center for all those mesh element (square mesh here)
+    for(j=0; j<nmesh_strand; ++j){
+
+      // first tetrahedron
+      a = cwl->mesh[meshi];
+      b = cwl->mesh[meshi+1];
+      c = cwl->mesh[meshi+2];
+      
+      tmp_oc[0] = cwl->coordinate_xyz[c] - centers[ci];
+      tmp_oc[1] = cwl->coordinate_xyz[c+1] - centers[ci+1];
+      tmp_oc[2] = cwl->coordinate_xyz[c+2] - centers[ci+2];
+
+      tmp_oa[0] = cwl->coordinate_xyz[a] - centers[ci];
+      tmp_oa[1] = cwl->coordinate_xyz[a+1] - centers[ci+1];
+      tmp_oa[2] = cwl->coordinate_xyz[a+2] - centers[ci+2];
+
+      v1 = (tmp_oc[1]*tmp_oa[2] - tmp_oc[2]*tmp_oa[1]) * (cwl->coordinate_xyz[b] - cwl->coordinate_xyz[a]); 
+      v1 += (tmp_oc[2]*tmp_oa[0] - tmp_oc[0]*tmp_oa[2]) * (cwl->coordinate_xyz[b+1] - cwl->coordinate_xyz[a+1]);
+      v1 += (tmp_oc[0]*tmp_oa[1] - tmp_oc[1]*tmp_oa[0]) * (cwl->coordinate_xyz[b+2] - cwl->coordinate_xyz[a+2]);
+      v1 /= 6.0f;
+
+      meshi += 3;
+      // fprintf(stdout, "\n> Volume tetrahedron 1 (%d,%d,%d,O1) = %f ", int(a/3), int(b/3), int(c/3), v1);
+
+      // second tetrahedron
+      tmp_ob[0] = cwl->coordinate_xyz[b] - centers[ci];
+      tmp_ob[1] = cwl->coordinate_xyz[b+1] - centers[ci+1];
+      tmp_ob[2] = cwl->coordinate_xyz[b+2] - centers[ci+2];
+
+      v2 = (tmp_oc[1]*tmp_ob[2] - tmp_oc[2]*tmp_ob[1]) * (centers[ci+DIM] - cwl->coordinate_xyz[b]); 
+      v2 += (tmp_oc[2]*tmp_ob[0] - tmp_oc[0]*tmp_ob[2]) * (centers[ci+DIM+1] - cwl->coordinate_xyz[b+1]);
+      v2 += (tmp_oc[0]*tmp_ob[1] - tmp_oc[1]*tmp_ob[0]) * (centers[ci+DIM+2] - cwl->coordinate_xyz[b+2]);
+      v2 /= 6.0f;
+
+      // two triangle used
+      // fprintf(stdout, "\n> Volume tetrahedron 2 (%d,%d,O1,O2) = %f", int(c/3), int(b/3), v2);
+
+      // third tetrahedon
+      d = cwl->mesh[meshi+1];
+      
+      // work with center of next strand
+      ci += DIM;
+      tmp_oc[0] = cwl->coordinate_xyz[c] - centers[ci];
+      tmp_oc[1] = cwl->coordinate_xyz[c+1] - centers[ci+1];
+      tmp_oc[2] = cwl->coordinate_xyz[c+2] - centers[ci+2];
+
+      tmp_od[0] = cwl->coordinate_xyz[d] - centers[ci];
+      tmp_od[1] = cwl->coordinate_xyz[d+1] - centers[ci+1];
+      tmp_od[2] = cwl->coordinate_xyz[d+2] - centers[ci+2];
+
+      v3 = (tmp_od[1]*tmp_oc[2] - tmp_od[2]*tmp_oc[1]) * (cwl->coordinate_xyz[b] - cwl->coordinate_xyz[d]); 
+      v3 += (tmp_od[2]*tmp_oc[0] - tmp_od[0]*tmp_oc[2]) * (cwl->coordinate_xyz[b+1] - cwl->coordinate_xyz[d+1]);
+      v3 += (tmp_od[0]*tmp_oc[1] - tmp_od[1]*tmp_oc[0]) * (cwl->coordinate_xyz[b+2] - cwl->coordinate_xyz[d+2]);
+      v3 /= 6.0f;
+
+      // pointor to center of current strand
+      ci -= DIM;
+      meshi += 3;
+      // fprintf(stdout, "\n> Volume tetrahedron 3 (%d,%d,%d,O2) = %f \n", int(a/3), int(b/3), int(d/3), v3);
+
+      total_v += v1 + v2 + v3;
+
+    }
+
+    ci += DIM;
+
+  }
+
+  // fprintf(stdout, "\n\t\t> Total volume of CW (triangle mesh) :  %f nm^3", total_v);
+  // fprintf(stdout, "\n\t\t> Total volume of CW (classic) :  %f nm^3", 
+  //         PI*cwl->get_radius()*cwl->get_radius()*cwl->get_length());
+
+  return -total_v * inner_pressure;
+
+}
+
+/*
  * Compute energy of interaction between the cellwall and the lipid layer
  * 
  * Terrific in time consuming
@@ -577,6 +713,100 @@ void compute_force_pressure(CellWallLipidLayer *ll){
     ll->forces_xyz[c+2] += ab_ac[2];
 
     meshi += DIM;
+
+  }
+
+  if( meshi/DIM != nmesh ){
+    fprintf(stdout,"\n\t> Problem in loop over mesh elements !");
+    fprintf(stdout,"\n\t> %d looped over vs %d in total \n", meshi/DIM, nmesh);
+    fflush(stdout);
+  }
+
+}
+
+/*
+ * Compute force due to the turgor pressure according to
+ * cross product 
+ * 
+ * Parameters:
+ *             lipid layer object, use coordinate array and lipid
+ *             ll_angles
+ * 
+ */
+void compute_force_pressure(CellWallMonolayer *cwl, double *forces_xyz){
+  
+  int i, meshi;
+  int a, b, c, nmesh;
+  double tmp;
+  double tmp_ab[DIM], tmp_ac[DIM], ab_ac[DIM];
+
+  nmesh = cwl->get_number_of_mesh_elements();
+
+  // 1/2 of the total area given by the cross product
+  // and 1/3 beacause there is 3 points
+  tmp = 0.5f * inner_pressure / 3.0f;
+
+  meshi = 0;
+  for(i=0; i<nmesh/2; ++i){
+    a = cwl->mesh[meshi];
+    b = cwl->mesh[meshi+1];
+    c = cwl->mesh[meshi+2];
+
+    tmp_ab[0] = cwl->coordinate_xyz[b] - cwl->coordinate_xyz[a];
+    tmp_ab[1] = cwl->coordinate_xyz[b+1] - cwl->coordinate_xyz[a+1];
+    tmp_ab[2] = cwl->coordinate_xyz[b+2] - cwl->coordinate_xyz[a+2];
+
+    tmp_ac[0] = cwl->coordinate_xyz[c] - cwl->coordinate_xyz[a];
+    tmp_ac[1] = cwl->coordinate_xyz[c+1] - cwl->coordinate_xyz[a+1];
+    tmp_ac[2] = cwl->coordinate_xyz[c+2] - cwl->coordinate_xyz[a+2];
+
+    ab_ac[0] = tmp * (tmp_ab[1]*tmp_ac[2] - tmp_ab[2]*tmp_ab[1]);
+    ab_ac[1] = tmp * (tmp_ab[2]*tmp_ac[0] - tmp_ab[0]*tmp_ab[2]);
+    ab_ac[2] = tmp * (tmp_ab[0]*tmp_ac[1] - tmp_ab[1]*tmp_ac[0]);
+
+    forces_xyz[a] += ab_ac[0];
+    forces_xyz[a+1] += ab_ac[1];
+    forces_xyz[a+2] += ab_ac[2];
+    
+    forces_xyz[b] += ab_ac[0];
+    forces_xyz[b+1] += ab_ac[1];
+    forces_xyz[b+2] += ab_ac[2];
+
+    forces_xyz[c] += ab_ac[0];
+    forces_xyz[c+1] += ab_ac[1];
+    forces_xyz[c+2] += ab_ac[2];
+
+    meshi += 3;
+
+    a = cwl->mesh[meshi];
+    b = cwl->mesh[meshi+1];
+    c = cwl->mesh[meshi+2];
+
+    tmp_ab[0] = cwl->coordinate_xyz[b] - cwl->coordinate_xyz[a];
+    tmp_ab[1] = cwl->coordinate_xyz[b+1] - cwl->coordinate_xyz[a+1];
+    tmp_ab[2] = cwl->coordinate_xyz[b+2] - cwl->coordinate_xyz[a+2];
+
+    tmp_ac[0] = cwl->coordinate_xyz[c] - cwl->coordinate_xyz[b];
+    tmp_ac[1] = cwl->coordinate_xyz[c+1] - cwl->coordinate_xyz[b+1];
+    tmp_ac[2] = cwl->coordinate_xyz[c+2] - cwl->coordinate_xyz[b+2];
+
+    ab_ac[0] = tmp * (tmp_ab[1]*tmp_ac[2] - tmp_ab[2]*tmp_ab[1]);
+    ab_ac[1] = tmp * (tmp_ab[2]*tmp_ac[0] - tmp_ab[0]*tmp_ab[2]);
+    ab_ac[2] = tmp * (tmp_ab[0]*tmp_ac[1] - tmp_ab[1]*tmp_ac[0]);
+
+    forces_xyz[a] += ab_ac[0];
+    forces_xyz[a+1] += ab_ac[1];
+    forces_xyz[a+2] += ab_ac[2];
+    
+    forces_xyz[b] += ab_ac[0];
+    forces_xyz[b+1] += ab_ac[1];
+    forces_xyz[b+2] += ab_ac[2];
+
+    forces_xyz[c] += ab_ac[0];
+    forces_xyz[c+1] += ab_ac[1];
+    forces_xyz[c+2] += ab_ac[2];
+
+    meshi += 3;
 
   }
 

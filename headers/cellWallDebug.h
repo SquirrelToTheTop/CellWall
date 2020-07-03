@@ -2,7 +2,7 @@
 #define CELLWALL_DEBUG_H
 
 #include <stdio.h>
-#include "cellWallObject.h"
+#include "cellWallMonolayer.h"
 #include "cellWallLipidLayer.h"
 
 // display glycosidic bonds for debug 
@@ -19,5 +19,8 @@ void display_lipid_lipid_angles(CellWallLipidLayer *ll);
 
 // display lipid - lipid mesh and masses number for debug
 void display_lipid_mesh(CellWallLipidLayer *ll);
+
+// display lipid - lipid mesh and masses number for debug
+void display_cw_mesh(CellWallMonolayer *cwl);
 
 #endif

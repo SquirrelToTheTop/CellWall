@@ -85,13 +85,28 @@ void CellWallIOSystem::write_coordinate_ascii(CellWallMonolayer *cwm){
   int i;
 
   double *xyz = cwm->get_coordinate_array();
+  char buff[20];
+
+  if( !activate_io ){
+    fprintf(stdout, "\n\t> IO desactivated !");
+    fflush(stdout);
+    return;
+  }
   
   open_file(_filename+xyz_ext);
   fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
   fflush(stdout);
 
   for(i=0; i< cwm->get_total_npg()*DIM; i+=DIM){
-    _output_file << std::setw(20) << xyz[i] << "\t" << xyz[i+1] << "\t" << xyz[i+2] << std::endl;
+    
+    sprintf(&buff[0], "%8.3f", xyz[i]);
+    _output_file << buff;
+
+    sprintf(&buff[0], "%8.3f", xyz[i+1]);
+    _output_file << buff;
+    
+    sprintf(&buff[0], "%8.3f", xyz[i+2]);
+    _output_file << buff << std::endl;
   }
 
   close_file(_filename + xyz_ext);
@@ -112,6 +127,12 @@ void CellWallIOSystem::write_coordinate_ascii_PLY(CellWallMonolayer *cwm){
   int i;
 
   double *xyz = cwm->get_coordinate_array();
+
+  if( !activate_io ){
+    fprintf(stdout, "\n\t> IO desactivated !");
+    fflush(stdout);
+    return;
+  }
 
   open_file(_filename + ply_ext);
   fprintf(stdout, "\n\t> Write output file : %s (#%d)", _filename.c_str(), _nwrite);
@@ -163,6 +184,12 @@ void CellWallIOSystem::write_PDB(CellWallMonolayer *cwm, int output_number){
   int idm=1;
 
   std::string output_filename;
+
+  if( !activate_io ){
+    fprintf(stdout, "\n\t> IO desactivated !");
+    fflush(stdout);
+    return;
+  }
 
   output_filename = _filename + "_cw_" + std::to_string(output_number) + pdb_ext;
 

@@ -114,3 +114,27 @@ void display_lipid_mesh(CellWallLipidLayer *ll){
   fprintf(stdout, "\n");
 
 }
+
+/*
+ * Display lipid mesh debug and sexy way
+ * 
+ * Parameters:
+ *               pointor to lipid layer
+ */
+void display_cw_mesh(CellWallMonolayer *cwl){
+  int i;
+  int mi, mj, mk;
+
+  fprintf(stdout, "\n\t> CW mesh : %d ", cwl->get_number_of_mesh_elements());
+  
+  for(i=0; i<cwl->get_number_of_mesh_elements()*3; i+=3){
+    mj = int(cwl->mesh[i])/3;
+    mi = int(cwl->mesh[i+1])/3;
+    mk = int(cwl->mesh[i+2])/3;
+    
+    fprintf(stdout, "\n\t\t> mesh #%5d between CW masses : %d -- %d -- %d\n", int(i/3), mj, mi, mk);
+
+  }
+  fprintf(stdout, "\n");
+
+}

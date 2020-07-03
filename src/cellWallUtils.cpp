@@ -3,8 +3,23 @@
 #include "cellWallConfig.h"
 #include "cellWallUtils.h"
 
+#include <mpi.h>
+#include <omp.h>
+
 // Sexy and entertaining welcome message
 void welcome_message(){
+
+  int mpi_size;
+  int omp_size, omp_max;
+
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+
+  #pragma omp parallel
+  {
+    omp_size = omp_get_num_threads();
+  }
+
+  omp_max = omp_get_max_threads();
 
   fprintf(stdout, "\n    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    \n");
   fprintf(stdout, "   @----------------------------------@   \n");
@@ -17,6 +32,10 @@ void welcome_message(){
   fprintf(stdout,  "  @---@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@---@   \n");
   fprintf(stdout,  "   @----------------------------------@    \n");
   fprintf(stdout,  "    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     \n");
+
+  fprintf(stdout, "\nParallel information : \n");
+  fprintf(stdout, "\t> Number of MPI process involved : %d\n", mpi_size);
+  fprintf(stdout, "\t> Number of OMP threads involved : %d / %d\n", omp_size, omp_max);
 
 }
 
